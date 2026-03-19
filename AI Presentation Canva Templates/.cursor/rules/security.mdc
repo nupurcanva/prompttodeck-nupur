@@ -1,0 +1,139 @@
+---
+description: Providing security best practices for developing with Canva templates
+alwaysApply: true
+---
+
+# Security Guidelines
+This document outlines security best practices for developing with Canva templates.
+
+## Rules
+
+**❌ NEVER:**
+- Hardcode API keys, passwords, tokens, or credentials in code, comments, or documentation
+- Ask users for API keys, passwords, tokens, or any credentials
+- Commit secrets to version control or log credentials to console
+- Run terraform commands or AWS CLI commands
+
+**✅ ALWAYS:**
+- For AI features: use the built-in `@canva-ct/genai` package (no API keys needed)
+- For other API keys: instruct the user to contact #creative-tech on Slack first
+- Use obviously fake placeholder data for prototypes
+- Pause and ask user before adding backend functionality
+
+## Authentication & Secrets
+
+**This is a frontend-only application** - any API keys added here will be visible in the browser (publicly accessible to anyone).
+
+### AI Agent Behavior
+
+**NEVER ask users for credentials:**
+
+The AI agent must NEVER:
+- Prompt users to provide credentials, tokens, or passwords
+- Request access to users' personal or company API accounts
+
+**What to do instead:**
+- Direct users to `@canva-ct/genai` for AI features
+- Tell users to contact #creative-tech for other API needs
+- Explain the security implications clearly
+
+### For AI Features (OpenAI, Anthropic, Gemini, TTS)
+
+Use the built-in `@canva-ct/genai` package - authentication is already handled securely:
+
+```typescript
+import { LLMStreamService } from "@canva-ct/genai/llm";
+import { OpenRouterService } from "@canva-ct/genai/openrouter";
+
+const llm = new LLMStreamService();
+const openrouter = new OpenRouterService();
+```
+
+### For Other API Integrations
+
+⚠️ **Contact #creative-tech on Slack before adding any API keys**
+
+They will help you:
+- Determine if the API key can be safely used in frontend
+- Set up backend infrastructure if needed
+- Implement proper security measures
+
+## Test Data Guidelines
+
+Use obviously fake data for prototypes:
+
+```typescript
+// ✅ Good - clearly fake data
+const user = { name: "Linda Test", email: "linda@test.com", phone: "123-456-7890" };
+
+// ❌ Bad - looks like real Canva data
+const user = { name: "Linda Smith", email: "linda@canva.com", phone: "555-0123" };
+```
+
+## Git & GitHub Guidelines
+
+- ✅ Use your Canva email address for GitHub (not personal email)
+- ✅ Store code in the **Canvanauts** GitHub organization
+- ❌ Never upload Canva code to personal GitHub repositories
+
+## When to Pause and Ask User
+
+ALWAYS pause before: backend functionality, external API calls, databases, authentication systems, or public endpoints.
+
+### Message Patterns
+
+**For API Keys:**
+> ⚠️ Before adding any API key:
+>
+> **For AI features** (OpenAI, Anthropic, Gemini, TTS):
+> - Use the built-in `@canva-ct/genai` package
+> - Would you like me to help you set it up?
+>
+> **For other APIs**:
+> - Please contact **#creative-tech** on Slack first
+> - They'll help determine if the API key can be safely used
+> - They'll guide you on proper setup and security measures
+> - This is a frontend-only app, so all API keys will be publicly visible unless we use a backend proxy
+>
+> Should I help you set up AI features using @canva-ct/genai, or would you like to reach out to #creative-tech first?
+
+**For Sharing Projects:**
+> ⚠️ It looks like you want to find a way to share this project with others, that's really exciting! Please check out **#flying-fox** on Slack to see if it suits your needs. If you need further support, please reach out to the Slack channel **#creative-tech** for the best approach.
+
+**When user attempts to save code to GitHub:**
+> ⚠️ It looks like you're trying to upload your code to GitHub.
+>
+> **Important reminders:**
+> - Use your **Canva email** for your GitHub account (not personal email)
+> - Store the code in the **Canvanauts** organization repository
+> - If you need help setting this up, contact **#creative-tech** on Slack
+
+## Pre-Commit Security Checklist
+
+Before committing code, verify:
+- [ ] No hardcoded secrets in code, comments, or documentation
+- [ ] AI features use @canva-ct/genai package (not custom API keys)
+
+**If any check fails:** Stop immediately, alert user, suggest secure alternative based on the supported patterns in the rules, and wait for confirmation.
+
+## Teaching Security Through Guardrails
+
+When blocking risky behavior, explain:
+- What the security risk is and why it's dangerous
+- What the secure alternative is
+- How it protects the user and Canva
+
+### Key Explanations
+
+**Why no hardcoded secrets:**
+- Saved in version history forever (even if deleted later)
+- Visible to anyone with code access
+- Frontend code runs in browser - anyone can view it in DevTools
+- For AI: use @canva-ct/genai; for other APIs: contact #creative-tech
+
+**Why no infrastructure commands:**
+- Changes need approval and tracking
+- Direct changes bypass security reviews
+- Mistakes can affect production systems
+
+**Goals:** Educate, protect, guide, and empower security awareness.

@@ -1,0 +1,27 @@
+.sectionHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.sectionHeader h3 {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: #1a1a1a;
+}
+
+.seeAll {
+  font-size: 13px;
+  font-weight: 500;
+  color: #8B5CF6;
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+.seeAll:hover {
+  color: #7C3AED;
+  text-decoration: underline;
+}
+

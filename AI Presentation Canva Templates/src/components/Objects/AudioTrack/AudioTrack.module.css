@@ -1,0 +1,119 @@
+.audioTrack {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  background: #fff;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.audioTrack:hover {
+  background: #f5f5f5;
+}
+
+/* Thumbnail with play button */
+.thumbnail {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.thumbnailImage {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background-size: cover;
+  background-position: center;
+  background-color: #e0e0e0;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Play icon overlay */
+.playIcon {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.4);
+  border-radius: 50%;
+  transition: background 0.2s ease;
+}
+
+.audioTrack:hover .playIcon {
+  background: rgba(0, 0, 0, 0.6);
+}
+
+/* Duration badge (bottom of circular thumbnail) */
+.durationBadge {
+  position: absolute;
+  bottom: -4px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0, 0, 0, 0.8);
+  color: white;
+  padding: 2px 6px;
+  border-radius: 10px;
+  font-size: 10px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+/* Track info (title and artist) */
+.info {
+  flex: 1;
+  min-width: 0; /* Allow text truncation */
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.title {
+  font-size: 14px;
+  font-weight: 500;
+  color: #1a1a1a;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.artist {
+  font-size: 12px;
+  color: #666;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Audio waveform visualization */
+.waveform {
+  width: 100%;
+  height: 24px;
+  margin-top: 4px;
+  opacity: 0.8;
+}
+
+.waveform svg {
+  display: block;
+}
+
+/* Pro/Crown indicator */
+.crown {
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #8B5CF6;
+  border-radius: 6px;
+}
+
+.crown svg {
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.2));
+}
+

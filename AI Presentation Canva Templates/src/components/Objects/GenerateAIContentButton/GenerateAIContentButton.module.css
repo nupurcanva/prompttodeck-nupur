@@ -1,0 +1,108 @@
+/* Split button container */
+.generateAiContentButtonGroup {
+    display: flex;
+    align-items: stretch;
+    width: 100%;
+    box-sizing: border-box;
+    border-radius: 8px;
+    overflow: hidden;
+    border: 1px solid #e0e0e0;
+    background-color: #ffffff;
+}
+
+/* Main generate button (left side) */
+.generateAiContentMainButton {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 14px;
+    background-color: #ffffff;
+    border: none;
+    border-right: 1px solid #e0e0e0;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 500;
+    color: #333;
+    flex: 1;
+    box-sizing: border-box;
+    justify-content: center;
+    font-family: 'Canva Sans', sans-serif;
+}
+
+/* When there's no dropdown, remove the right border */
+.noDropdown {
+    border-right: none;
+}
+
+.generateAiContentMainButton:hover {
+    background-color: #f9f9f9;
+}
+
+.generateAiContentMainButton:active {
+    background-color: #f0f0f0;
+}
+
+.generateAiContentMainButton:disabled {
+    background-color: #f5f5f5;
+    color: #999;
+    cursor: not-allowed;
+}
+
+/* Dropdown button (right side) */
+.generateAiContentDropdownButton {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 10px 12px;
+    background-color: #ffffff;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    color: #666;
+    flex-shrink: 0;
+}
+
+.generateAiContentDropdownButton:hover {
+    background-color: #f9f9f9;
+}
+
+.generateAiContentDropdownButton:active {
+    background-color: #f0f0f0;
+}
+
+.generateAiContentDropdownButton:disabled {
+    background-color: #f5f5f5;
+    color: #999;
+    cursor: not-allowed;
+}
+
+/* Icon styles */
+.generateAiContentIcon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    width: 24px;
+    height: 24px;
+}
+
+.generateAiContentIcon svg {
+    width: 24px;
+    height: 24px;
+}
+
+/* Text styles */
+.generateAiContentText {
+    text-align: left;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Disabled state opacity */
+.generateAiContentMainButton:disabled .generateAiContentIcon,
+.generateAiContentDropdownButton:disabled {
+    opacity: 0.5;
+}

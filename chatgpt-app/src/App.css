@@ -1,0 +1,1966 @@
+/* ChatGPT Homepage Replica - Exact styling from Figma design */
+
+* {
+  box-sizing: border-box;
+}
+
+/* Ensure full-height chain for scroll containment */
+html, body, #root {
+  height: 100%;
+  overflow: hidden;
+}
+
+.chatgpt-layout {
+  display: flex;
+  width: 100%;
+  height: 100%;
+  min-height: 100vh;
+  overflow: hidden;
+  background: #fff;
+  font-family: "SF Pro", -apple-system, BlinkMacSystemFont, sans-serif;
+  color: #0d0d0d;
+}
+
+/* Sidebar */
+.sidebar {
+  width: 52px;
+  min-width: 52px;
+  flex-shrink: 0;
+  background: #fff;
+  border-right: 1px solid rgba(13, 13, 13, 0.05);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 8px 0;
+  gap: 6px;
+}
+
+.sidebar-logo {
+  width: 52px;
+  height: 52px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #0d0d0d;
+  margin-top: -8px;
+  margin-bottom: -8px;
+}
+
+.sidebar-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+  align-items: center;
+}
+
+.sidebar-item {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  color: #0d0d0d;
+  transition: background 0.15s;
+}
+
+.sidebar-item:hover {
+  background: rgba(13, 13, 13, 0.06);
+}
+
+/* Main content */
+.main-content {
+  flex: 1 1 0;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+  position: relative;
+}
+
+/* Header */
+.header {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 52px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px 8px 4px;
+  z-index: 10;
+}
+
+.header-dropdown {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 10px 6px 12px;
+  background: transparent;
+  border-radius: 8px;
+  font-size: 18px;
+  font-weight: 400;
+  color: #5d5d5d;
+  letter-spacing: -0.4px;
+  cursor: pointer;
+}
+
+.header-dropdown:hover {
+  background: rgba(13, 13, 13, 0.04);
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.header-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  background: transparent;
+  border: none;
+  border-radius: 999px;
+  font-size: 14px;
+  font-weight: 500;
+  font-family: "SF Pro", -apple-system, BlinkMacSystemFont, sans-serif;
+  color: #0d0d0d;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.header-btn:hover {
+  background: rgba(13, 13, 13, 0.06);
+}
+
+.share-btn svg {
+  flex-shrink: 0;
+}
+
+.icon-btn {
+  padding: 8px;
+  width: 32px;
+  justify-content: center;
+}
+
+/* Chat pane - fixed viewport height, content scrolls within, composer sticky at bottom (all pages: outline, options, create-from-existing, generate-from-scratch, remix) */
+.chat-pane {
+  flex: 1 1 0;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  background: #fff;
+  position: relative;
+  overflow: hidden;
+}
+
+.chat-inner {
+  flex: 1 1 0;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+  padding: 64px 16px 160px;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+}
+
+.conversation {
+  width: 100%;
+  max-width: 768px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+/* Message bubble */
+.message-row {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+}
+
+.message-row.user {
+  align-self: flex-end;
+}
+
+.message-bubble {
+  background: #ededed;
+  padding: 10px 20px;
+  border-radius: 24px;
+  max-width: 598px;
+}
+
+.message-bubble p {
+  margin: 0;
+  font-size: 16px;
+  line-height: 1.5;
+  color: #0d0d0d;
+  letter-spacing: -0.16px;
+}
+
+.message-bubble strong {
+  font-weight: 400;
+}
+
+/* ChatGPT follow-up message - plain text, left-aligned, no bubble, with utility icons */
+.chatgpt-follow-up {
+  align-self: flex-start;
+  width: 100%;
+  max-width: 768px;
+}
+
+.chatgpt-follow-up-text {
+  margin: 0 0 8px;
+  font-size: 16px;
+  line-height: 1.5;
+  color: #0d0d0d;
+  letter-spacing: -0.16px;
+  font-weight: 400;
+}
+
+.chatgpt-follow-up-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.chatgpt-follow-up-icon {
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  color: #8e8ea0;
+  transition: color 0.15s, background 0.15s;
+}
+
+.chatgpt-follow-up-icon:hover {
+  color: #0d0d0d;
+  background: rgba(13, 13, 13, 0.06);
+}
+
+.chatgpt-follow-up-icon svg {
+  flex-shrink: 0;
+}
+
+/* App content - Canva section */
+.app-content {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+}
+
+.app-attribution {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  height: 26px;
+}
+
+.canva-logo {
+  width: 24px;
+  height: 24px;
+  flex-shrink: 0;
+}
+
+.canva-logo img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+/* Canva logo in attribution - dark to match secondary text */
+
+/* Canva logo in tag - blue to match accent */
+
+.app-attribution span {
+  font-size: 17px;
+  color: #5d5d5d;
+  letter-spacing: 0px;
+  line-height: 23px;
+}
+
+/* Outline page - deck outline before choose how to get started */
+.outline-container {
+  padding: 24px;
+  background: #fff;
+  border-radius: 24px;
+  box-shadow: 0px 6px 12px 0px rgba(0, 0, 0, 0.05);
+  border: 0.5px solid rgba(13, 13, 13, 0.08);
+}
+
+.outline-title {
+  font-size: 20px;
+  font-weight: 600;
+  color: #0d0d0d;
+  margin: 0 0 4px;
+  letter-spacing: -0.5px;
+}
+
+.outline-subtitle {
+  font-size: 12px;
+  color: #848484;
+  margin: 0 0 24px;
+}
+
+.outline-sections {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.outline-section {
+  padding-bottom: 24px;
+  border-bottom: 1px solid rgba(13, 13, 13, 0.08);
+}
+
+.outline-section:last-of-type {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.outline-section-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #0d0d0d;
+  margin: 0 0 8px;
+  letter-spacing: -0.16px;
+  line-height: 1.4;
+}
+
+.outline-section-desc {
+  font-size: 14px;
+  color: rgba(13, 13, 13, 0.8);
+  margin: 0 0 12px;
+  line-height: 1.6;
+  letter-spacing: -0.14px;
+}
+
+.outline-section-points {
+  margin: 0;
+  padding-left: 20px;
+  font-size: 13px;
+  line-height: 1.7;
+  color: rgba(13, 13, 13, 0.75);
+}
+
+.outline-section-points li {
+  margin-bottom: 6px;
+}
+
+.options-container {
+  padding: 24px;
+  background: #fff;
+  border-radius: 24px;
+  box-shadow: 0px 6px 12px 0px rgba(0, 0, 0, 0.05);
+  border: 0.5px solid rgba(13, 13, 13, 0.08);
+}
+
+.section-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: #0d0d0d;
+  letter-spacing: -0.45px;
+  margin: 0 0 16px;
+  line-height: 26px;
+}
+
+/* Cards */
+.cards-row {
+  display: flex;
+  gap: 16px;
+}
+
+.card {
+  flex: 1;
+  min-width: 80px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px;
+  background: #fff;
+  border: 0.5px solid rgba(13, 13, 13, 0.15);
+  border-radius: 24px;
+  box-shadow: none;
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s;
+}
+
+.card:hover {
+  border-color: rgba(13, 13, 13, 0.2);
+  background: rgba(13, 13, 13, 0.02);
+}
+
+.card-autofill-coming-soon {
+  position: relative;
+}
+
+.card-coming-soon-banner {
+  padding: 6px 16px;
+  background: #8b3dff;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 600;
+  border-radius: 999px;
+  letter-spacing: -0.12px;
+}
+
+.card-thumbnail {
+  flex: 1;
+  min-height: 200px;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1.33px solid rgba(57, 70, 96, 0.14);
+}
+
+.card-illustration {
+  width: 100%;
+  height: 100%;
+  min-height: 200px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  background: linear-gradient(135deg, #f8f7ff 0%, #f0eeff 50%, #e8e5ff 100%);
+}
+
+.card-thumb-2 .card-illustration {
+  background: linear-gradient(135deg, #fff8f5 0%, #fff0eb 50%, #ffe8e0 100%);
+}
+
+.card-thumb-3 .card-illustration {
+  background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 50%, #bbf7d0 100%);
+}
+
+.card-illustration-blank {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.card-illustration-blue {
+  background: linear-gradient(135deg, #f8f7ff 0%, #f0eeff 50%, #e8e5ff 100%);
+}
+
+.card-illustration-orange {
+  background: linear-gradient(135deg, #fff8f5 0%, #fff0eb 50%, #ffe8e0 100%);
+}
+
+.card-illustration-green {
+  background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 50%, #bbf7d0 100%);
+}
+
+.card-illustration.autofill {
+  flex-direction: column;
+  gap: 12px;
+}
+
+.template-doc {
+  width: 70px;
+  padding: 12px;
+  background: #fff;
+  border-radius: 6px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.template-line {
+  height: 6px;
+  background: rgba(13, 13, 13, 0.15);
+  border-radius: 3px;
+}
+
+.template-line.short {
+  width: 60%;
+}
+
+.autofill-icon {
+  font-size: 18px;
+  color: #16a34a;
+  font-weight: 600;
+}
+
+.doc-icon {
+  width: 80px;
+  height: 100px;
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.wave-shape {
+  position: absolute;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 60px;
+  height: 20px;
+  background: linear-gradient(90deg, #7c3aed, #0285ff);
+  border-radius: 4px;
+  opacity: 0.8;
+}
+
+.stars {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  font-size: 10px;
+  color: #fbbf24;
+}
+
+.cursor-icon {
+  position: absolute;
+  bottom: 30px;
+  right: 20px;
+  font-size: 24px;
+  color: #ec4899;
+}
+
+.card-illustration.transform {
+  flex-direction: row;
+  gap: 12px;
+}
+
+.doc-left,
+.doc-right {
+  width: 60px;
+  height: 80px;
+  background: #fff;
+  border-radius: 6px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+}
+
+.doc-right {
+  border: 2px dashed rgba(13, 13, 13, 0.2);
+  background: transparent;
+}
+
+.arrow {
+  font-size: 20px;
+  color: #7c3aed;
+  align-self: center;
+}
+
+.card-content {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.card-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #0f1015;
+  margin: 0;
+  line-height: 22px;
+}
+
+.card-desc {
+  font-size: 12px;
+  color: rgba(15, 18, 26, 0.7);
+  margin: 0;
+  line-height: 20px;
+}
+
+/* Create from existing design - Option 2 widget state */
+.create-from-existing {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.create-from-existing-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.back-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  background: transparent;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  color: #0d0d0d;
+  transition: background 0.15s;
+}
+
+.back-btn:hover {
+  background: rgba(13, 13, 13, 0.06);
+}
+
+.create-from-existing-title {
+  margin-bottom: 0;
+  flex: 1;
+}
+
+.segmented-control {
+  display: flex;
+  gap: 0;
+  padding: 4px;
+  background: #f3f3f3;
+  border-radius: 11px;
+  overflow: hidden;
+}
+
+.segmented-tab {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 24px;
+  background: transparent;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 400;
+  font-family: "SF Pro", -apple-system, BlinkMacSystemFont, sans-serif;
+  color: #0d0d0d;
+  letter-spacing: -0.18px;
+  line-height: 20px;
+  cursor: pointer;
+  transition: background 0.15s, box-shadow 0.15s;
+}
+
+.segmented-tab:hover {
+  background: rgba(13, 13, 13, 0.04);
+}
+
+.segmented-tab.active {
+  background: #fff;
+  box-shadow: 0px 9px 9px 0px rgba(0, 0, 0, 0.01), 0px 2px 5px 0px rgba(0, 0, 0, 0.06);
+}
+
+.template-search-bar {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  padding: 4px 4px 4px 8px;
+  gap: 8px;
+  width: 100%;
+  height: 40px;
+  margin: 16px 0;
+  background: #ffffff;
+  border: 1px solid rgba(13, 13, 13, 0.15);
+  border-radius: 999px;
+}
+
+.template-search-icon {
+  flex: none;
+  width: 18px;
+  height: 18px;
+  opacity: 0.5;
+}
+
+.template-search-input {
+  flex: 1;
+  min-width: 0;
+  padding: 0;
+  border: none;
+  background: transparent;
+  font-family: "Canva Sans", "SF Pro", -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 22px;
+  color: #0f1015;
+  outline: none;
+}
+
+.template-search-input::placeholder {
+  color: rgba(15, 18, 26, 0.5);
+}
+
+.template-search-btn {
+  flex-shrink: 0;
+  padding: 8px 20px;
+  background: #ffffff;
+  color: #0d0d0d;
+  border: none;
+  border-radius: 999px;
+  font-size: 14px;
+  font-weight: 500;
+  font-family: "SF Pro", "Canva Sans", -apple-system, BlinkMacSystemFont, sans-serif;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.template-search-btn:hover {
+  background: rgba(13, 13, 13, 0.04);
+}
+
+.template-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.template-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.template-item:hover {
+  background: rgba(64, 79, 109, 0.06);
+}
+
+.template-item-main {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+  flex: 1;
+}
+
+.template-item-actions {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  justify-content: flex-end;
+  flex-shrink: 0;
+  width: 320px;
+  min-width: 320px;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.template-item:hover .template-item-actions {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.template-action-btn {
+  padding: 12px 20px;
+  border-radius: 30px;
+  font-family: "SF Pro", "Canva Sans", -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 17px;
+  font-weight: 600;
+  letter-spacing: -0.32px;
+  line-height: 1;
+  cursor: pointer;
+  border: none;
+}
+
+.template-action-preview {
+  background: #fff;
+  color: #0d0d0d;
+  border: 1px solid #e7e7e7;
+}
+
+.template-action-preview:hover {
+  background: rgba(13, 13, 13, 0.04);
+  border-color: rgba(13, 13, 13, 0.15);
+}
+
+.template-action-remix {
+  background: #8b3dff;
+  color: #fff;
+}
+
+.template-action-remix:hover {
+  background: #7a2eeb;
+}
+
+.template-thumb {
+  width: 64px;
+  height: 64px;
+  flex-shrink: 0;
+  border-radius: 4px;
+  overflow: hidden;
+  background: #f0f0f0;
+}
+
+.template-thumb:not(.template-thumb-blank) img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.template-thumb-blank {
+  background: #e8e8e8;
+}
+
+.template-info {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.template-name {
+  font-size: 16px;
+  font-weight: 400;
+  color: #0d0d0d;
+  letter-spacing: -0.16px;
+  line-height: 1.5;
+  margin: 0;
+}
+
+.template-type {
+  font-size: 12px;
+  color: #848484;
+  letter-spacing: -0.12px;
+  line-height: 1.5;
+  margin: 0;
+}
+
+.search-finding-heading {
+  font-size: 12px;
+  font-weight: 500;
+  color: rgba(13, 13, 13, 0.6);
+  margin: 0 0 12px;
+  letter-spacing: -0.12px;
+}
+
+/* Generate from scratch - Canva widget with outline (Figma node 810-7610) */
+.generate-from-scratch-widget {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.generate-from-scratch-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.generate-widget-title {
+  font-size: 20px;
+  font-weight: 600;
+  color: #0d0d0d;
+  letter-spacing: -0.5px;
+  margin: 0;
+  line-height: 28px;
+}
+
+.tone-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.tone-pill {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  background: #fff;
+  border: 1px solid rgba(13, 13, 13, 0.15);
+  border-radius: 999px;
+  font-size: 14px;
+  font-weight: 500;
+  font-family: "SF Pro", "Canva Sans", -apple-system, BlinkMacSystemFont, sans-serif;
+  color: #0d0d0d;
+  letter-spacing: -0.18px;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.tone-pill:hover {
+  background: rgba(13, 13, 13, 0.04);
+  border-color: rgba(13, 13, 13, 0.2);
+}
+
+.tone-pill.active {
+  background: #0d0d0d;
+  border-color: #0d0d0d;
+  color: #fff;
+}
+
+.tone-pill svg:first-of-type {
+  flex-shrink: 0;
+}
+
+.tone-pill svg:last-of-type {
+  flex-shrink: 0;
+  opacity: 0.7;
+}
+
+.tone-pill-update {
+  border-style: dashed;
+}
+
+.outline-items {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.outline-item {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.outline-item-num {
+  width: 28px;
+  height: 28px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(13, 13, 13, 0.08);
+  border-radius: 50%;
+  font-size: 14px;
+  font-weight: 600;
+  color: #0d0d0d;
+  letter-spacing: -0.14px;
+}
+
+.outline-item-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.outline-item-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #0d0d0d;
+  letter-spacing: -0.16px;
+  margin: 0 0 4px;
+  line-height: 1.4;
+}
+
+.outline-item-desc {
+  font-size: 14px;
+  font-weight: 400;
+  color: rgba(13, 13, 13, 0.7);
+  letter-spacing: -0.14px;
+  margin: 0;
+  line-height: 1.5;
+}
+
+.generate-widget-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 8px;
+  border-top: 1px solid rgba(13, 13, 13, 0.08);
+}
+
+.more-pages {
+  font-size: 14px;
+  font-weight: 500;
+  color: rgba(13, 13, 13, 0.6);
+  letter-spacing: -0.14px;
+}
+
+.generate-design-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  background: #8b3dff;
+  color: #fff;
+  border: none;
+  border-radius: 999px;
+  font-size: 16px;
+  font-weight: 600;
+  font-family: "SF Pro", "Canva Sans", -apple-system, BlinkMacSystemFont, sans-serif;
+  letter-spacing: -0.32px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.generate-design-btn:hover {
+  background: #7a2eeb;
+}
+
+.generate-design-btn svg {
+  flex-shrink: 0;
+}
+
+/* Edit with AI widget - Figma node 539-42259 */
+.remix-with-ai-widget {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.remix-widget-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.remix-widget-title {
+  font-size: 20px;
+  font-weight: 600;
+  color: #0d0d0d;
+  letter-spacing: -0.5px;
+  margin: 0;
+  line-height: 28px;
+}
+
+.remix-template-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  background: #fff;
+  border: 1px solid rgba(13, 13, 13, 0.08);
+  border-radius: 12px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+
+.remix-template-thumb {
+  width: 64px;
+  height: 64px;
+  flex-shrink: 0;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #f0f0f0;
+  border: 1px solid rgba(57, 70, 96, 0.14);
+}
+
+.remix-template-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.remix-template-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.remix-template-name {
+  font-size: 16px;
+  font-weight: 500;
+  color: #0d0d0d;
+  margin: 0;
+  line-height: 1.4;
+  letter-spacing: -0.16px;
+}
+
+.remix-template-type {
+  font-size: 12px;
+  color: #848484;
+  margin: 0;
+  line-height: 1.4;
+  letter-spacing: -0.12px;
+}
+
+.remix-template-actions {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.remix-btn-outline {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  background: #fff;
+  color: #0d0d0d;
+  border: 1px solid rgba(13, 13, 13, 0.15);
+  border-radius: 999px;
+  font-size: 14px;
+  font-weight: 500;
+  font-family: inherit;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.remix-btn-outline:hover {
+  background: rgba(13, 13, 13, 0.04);
+  border-color: rgba(13, 13, 13, 0.25);
+}
+
+/* Review the content - Editable Document style */
+.remix-review-section {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.remix-review-label {
+  font-size: 16px;
+  font-weight: 600;
+  color: #0d0d0d;
+  margin: 0;
+  letter-spacing: -0.16px;
+}
+
+.remix-editable-document {
+  background: #ffffff;
+  border: 1px solid #e0e0e0;
+  border-radius: 16px;
+  overflow: hidden;
+  font-family: "SF Pro", -apple-system, BlinkMacSystemFont, "Inter", "Helvetica Neue", sans-serif;
+  min-height: 280px;
+  max-height: 420px;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+
+.remix-doc-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 20px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+  flex-shrink: 0;
+}
+
+.remix-doc-title-label {
+  font-size: 14px;
+  font-weight: 600;
+  color: #000000;
+  letter-spacing: -0.14px;
+}
+
+.remix-doc-actions {
+  display: flex;
+  gap: 16px;
+}
+
+.remix-doc-action {
+  background: none;
+  border: none;
+  font-size: 14px;
+  font-weight: 400;
+  color: #666666;
+  cursor: pointer;
+  padding: 0;
+  font-family: inherit;
+}
+
+.remix-doc-action:hover {
+  color: #000000;
+}
+
+.remix-doc-action-enhance {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.remix-doc-action-enhance svg {
+  flex-shrink: 0;
+}
+
+/* Edit button - opens document in full screen (replaces Enhance rectangle) */
+.remix-edit-doc-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  background: transparent;
+  border: 1px solid rgba(13, 13, 13, 0.2);
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #0d0d0d;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.remix-edit-doc-btn:hover {
+  background: rgba(13, 13, 13, 0.04);
+  border-color: rgba(13, 13, 13, 0.3);
+}
+
+.remix-edit-doc-btn svg {
+  flex-shrink: 0;
+}
+
+/* Read-only content preview in chat - scrolls with heading, click to edit in full screen */
+.remix-doc-preview {
+  width: 100%;
+  min-height: 0;
+  padding: 0;
+  margin: 0;
+  border: none;
+  background: transparent;
+  font-size: 14px;
+  font-weight: 400;
+  font-family: inherit;
+  line-height: 1.6;
+  color: #000000;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  cursor: pointer;
+  outline: none;
+}
+
+.remix-doc-preview-empty {
+  color: #666666;
+}
+
+.remix-doc-content {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 0;
+}
+
+.remix-doc-scroll-inner {
+  padding: 20px 24px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.remix-doc-main-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: #000000;
+  letter-spacing: -0.5px;
+  margin: 0 0 12px;
+  line-height: 1.3;
+}
+
+.remix-doc-textarea {
+  width: 100%;
+  min-height: 320px;
+  padding: 0;
+  margin: 0;
+  border: none;
+  background: transparent;
+  font-size: 14px;
+  font-weight: 400;
+  font-family: inherit;
+  line-height: 1.6;
+  color: #000000;
+  resize: none;
+  outline: none;
+  overflow: visible;
+}
+
+.remix-doc-textarea::placeholder {
+  color: #666666;
+}
+
+.remix-widget-footer {
+  display: flex;
+  justify-content: flex-end;
+  padding-top: 4px;
+}
+
+.remix-generate-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 24px;
+  background: #8b3dff;
+  color: #fff;
+  border: none;
+  border-radius: 999px;
+  font-size: 14px;
+  font-weight: 510;
+  font-family: inherit;
+  letter-spacing: -0.18px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.remix-generate-btn:hover {
+  background: #7a2eeb;
+}
+
+.remix-generate-btn svg {
+  flex-shrink: 0;
+}
+
+/* Generating design widget - Figma 1332-96481 */
+.generating-widget {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: 100%;
+}
+
+.generating-preview-area {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  max-height: 320px;
+  border-radius: 16px;
+  overflow: hidden;
+  background: #ffffff;
+}
+
+.generating-gradient-bg {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background: linear-gradient(
+    135deg,
+    rgba(139, 61, 255, 0.25) 0%,
+    rgba(139, 61, 255, 0.12) 40%,
+    rgba(139, 61, 255, 0.06) 70%,
+    rgba(255, 255, 255, 0.95) 100%
+  );
+  background-size: 200% 200%;
+  animation: generating-gradient-shift 4s ease-in-out infinite;
+  transition: opacity 0.5s ease-out;
+}
+
+.generating-gradient-bg.faded {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.generating-preview-bg {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+}
+
+.generating-preview-bg-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: blur(8px);
+  transition: filter 0.5s ease-out;
+}
+
+.generating-preview-bg-img.unblurred {
+  filter: blur(0);
+}
+
+@keyframes generating-gradient-shift {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+
+.generating-preview-content {
+  position: relative;
+  z-index: 2;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  padding: 24px;
+}
+
+.generating-preview-text {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 400;
+  color: #0d0d0d;
+  text-align: center;
+  max-width: 400px;
+  line-height: 1.5;
+}
+
+.generating-open-canva-btn {
+  padding: 10px 20px;
+  background: #8b3dff;
+  color: #fff;
+  border: none;
+  border-radius: 999px;
+  font-size: 14px;
+  font-weight: 500;
+  font-family: inherit;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.generating-open-canva-btn:hover {
+  background: #7a2eeb;
+}
+
+.generating-slides-row {
+  display: flex;
+  gap: 12px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+  -webkit-overflow-scrolling: touch;
+}
+
+.generating-slides-row::-webkit-scrollbar {
+  height: 6px;
+}
+
+.generating-slides-row::-webkit-scrollbar-thumb {
+  background: rgba(13, 13, 13, 0.2);
+  border-radius: 3px;
+}
+
+.generating-slide-thumb {
+  flex-shrink: 0;
+  width: 120px;
+  aspect-ratio: 16 / 9;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #ffffff;
+}
+
+.generating-slide-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.generating-slide-gradient {
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    135deg,
+    rgba(139, 61, 255, 0.25) 0%,
+    rgba(139, 61, 255, 0.15) 40%,
+    rgba(139, 61, 255, 0.08) 70%,
+    rgba(255, 255, 255, 0.9) 100%
+  );
+  background-size: 200% 200%;
+  animation: generating-gradient-shift 4s ease-in-out infinite;
+}
+
+.template-empty {
+  padding: 24px;
+  font-size: 14px;
+  color: #848484;
+  text-align: center;
+}
+
+/* Composer - sticky at bottom, content scrolls underneath (Figma 539-42048) */
+.composer-wrapper {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: 1040px;
+  padding: 16px 16px 24px;
+  z-index: 10;
+  flex-shrink: 0;
+  background: linear-gradient(to top, #fff 0%, #fff 40%, rgba(255, 255, 255, 0.95) 75%, transparent 100%);
+}
+
+.composer {
+  background: #fff;
+  border: 0.5px solid rgba(0, 0, 0, 0.07);
+  border-radius: 28px;
+  box-shadow: 0 6px 16px -4px rgba(0, 0, 0, 0.08), 0 0.5px 1px rgba(0, 0, 0, 0.04), 0 3px 6px -3px rgba(0, 0, 0, 0.05);
+  max-width: 768px;
+  margin: 0 auto;
+  overflow: hidden;
+}
+
+.composer-content {
+  padding: 16px 20px 8px;
+  min-height: 48px;
+}
+
+.composer-value {
+  display: flex;
+  align-items: center;
+  min-height: 24px;
+}
+
+.composer-input {
+  flex: 1;
+  border: none;
+  outline: none;
+  font-size: 16px;
+  line-height: 24px;
+  color: #0d0d0d;
+  letter-spacing: -0.32px;
+  font-family: "SF Pro", -apple-system, BlinkMacSystemFont, sans-serif;
+  background: transparent;
+  width: 100%;
+}
+
+.composer-input::placeholder {
+  color: #8f8f8f;
+}
+
+.composer-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 14px 12px;
+}
+
+.composer-left,
+.composer-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.composer-icon-btn {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  border-radius: 18px;
+  cursor: pointer;
+  color: #0d0d0d;
+  transition: background 0.15s;
+}
+
+.composer-icon-btn:hover {
+  background: rgba(13, 13, 13, 0.06);
+}
+
+.canva-tag {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px 4px 6px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 999px;
+  font-size: 14px;
+  color: #0285ff;
+  letter-spacing: -0.154px;
+  box-sizing: content-box;
+  background-clip: unset;
+  -webkit-background-clip: unset;
+  border-style: solid;
+  border-width: 0px;
+  border-color: rgba(0, 0, 0, 0);
+  border-image: none;
+}
+
+.canva-tag-icon {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+}
+
+.canva-tag-close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  color: #0285ff;
+  font-size: 16px;
+  height: 24px;
+  width: 24px;
+  cursor: pointer;
+  padding: 0;
+  line-height: 1;
+  opacity: 0.8;
+}
+
+.canva-tag-close:hover {
+  opacity: 1;
+}
+
+.send-btn {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #0d0d0d;
+  border: none;
+  border-radius: 999px;
+  cursor: pointer;
+  color: #fff;
+  transition: opacity 0.15s;
+}
+
+.send-btn:hover {
+  opacity: 0.9;
+}
+
+.send-btn:active {
+  transform: scale(0.98);
+}
+
+/* Full-screen design preview - Figma layout */
+.preview-fullscreen {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  height: 100vh;
+  overflow: hidden;
+  background: #fff;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.preview-header {
+  height: 64px;
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid rgba(13, 13, 13, 0.08);
+  flex-shrink: 0;
+}
+
+.preview-header-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.preview-close-btn {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  color: #0d0d0d;
+  transition: background 0.15s;
+}
+
+.preview-close-btn:hover {
+  background: rgba(13, 13, 13, 0.06);
+}
+
+.preview-header .preview-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: #0d0d0d;
+  letter-spacing: -0.45px;
+  margin: 0;
+  line-height: 26px;
+}
+
+.preview-open-canva-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  background: #8b3dff;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  font-family: "SF Pro", "Canva Sans", -apple-system, BlinkMacSystemFont, sans-serif;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.preview-open-canva-btn:hover {
+  background: #7a2eeb;
+}
+
+.preview-main {
+  position: relative;
+  flex: 1 1 0;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+  padding: 36px 106px 180px;
+}
+
+.preview-pages-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 295px));
+  gap: 16px;
+  justify-content: center;
+  max-width: 1264px;
+  margin: 0 auto;
+}
+
+@media (max-width: 900px) {
+  .preview-pages-grid {
+    grid-template-columns: repeat(2, minmax(0, 295px));
+  }
+}
+
+@media (max-width: 500px) {
+  .preview-pages-grid {
+    grid-template-columns: 1fr;
+  }
+  .preview-main {
+    padding: 24px 16px;
+  }
+}
+
+.preview-page-card {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.preview-page-label {
+  font-size: 14px;
+  font-weight: 400;
+  color: #0d0d0d;
+  margin: 0;
+  line-height: 16px;
+}
+
+.preview-page-thumb {
+  width: 100%;
+  aspect-ratio: 295 / 168;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #f0f0f0;
+  border: 1px solid rgba(57, 70, 96, 0.14);
+}
+
+.preview-page-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* Choose slides - selectable page cards */
+.choose-slides-fullscreen .preview-main {
+  background: #f5f5f5;
+}
+
+.choose-slides-page-card {
+  position: relative;
+  cursor: pointer;
+  border-radius: 8px;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.choose-slides-thumb {
+  position: relative;
+}
+
+.choose-slides-page-card .choose-slides-thumb {
+  border: 2px solid rgba(57, 70, 96, 0.14);
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.choose-slides-page-card.selected .choose-slides-thumb {
+  border-color: #8b3dff;
+  box-shadow: 0 0 0 2px rgba(139, 61, 255, 0.3);
+}
+
+.choose-slides-checkbox {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  z-index: 2;
+  width: 20px;
+  height: 20px;
+  pointer-events: none;
+}
+
+.choose-slides-checkbox svg {
+  display: block;
+  width: 20px;
+  height: 20px;
+}
+
+.choose-slides-remix-btn {
+  min-width: 180px;
+}
+
+/* Full-screen edit document - same layout as preview pages, width matches main chat (768px) + padding */
+.edit-document-fullscreen .edit-document-main {
+  padding: 24px 24px 120px;
+  max-width: 960px;
+  width: 100%;
+  margin: 0 auto;
+}
+
+.edit-document-content {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+}
+
+.edit-document-fullscreen .edit-document-textarea {
+  min-height: calc(100vh - 280px);
+  padding: 16px 0;
+  font-size: 15px;
+  line-height: 1.65;
+}
+
+/* Edit document composer - wider than other full screens, with visible blinking cursor */
+.edit-document-composer {
+  max-width: 960px;
+  width: 100%;
+}
+
+.edit-document-composer .preview-composer-input {
+  caret-color: #0d0d0d;
+}
+
+.preview-footer {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 24px 16px 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  flex-shrink: 0;
+  z-index: 10;
+  background: linear-gradient(to top, #fff 0%, rgba(255, 255, 255, 0.98) 70%, transparent 100%);
+  background: linear-gradient(to top, #fff 0%, rgba(255, 255, 255, 0.97) 70%, transparent 100%);
+}
+
+.preview-remix-btn {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  padding: 8px 16px;
+  gap: 4px;
+  min-width: 122px;
+  height: 36px;
+  background: #8b3dff;
+  color: #fff;
+  border: none;
+  border-radius: 999px;
+  font-family: "SF Pro", "Canva Sans", -apple-system, BlinkMacSystemFont, sans-serif;
+  font-style: normal;
+  font-weight: 510;
+  font-size: 14px;
+  line-height: 20px;
+  letter-spacing: -0.18px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.preview-remix-btn:hover {
+  background: #7a2eeb;
+}
+
+.preview-composer {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  max-width: 658px;
+  height: 52px;
+  padding: 0 10px;
+  background: #fff;
+  border: 1px solid rgba(13, 13, 13, 0.15);
+  border-radius: 28px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.preview-composer-icon {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.preview-composer-input {
+  flex: 1;
+  min-width: 0;
+  border: none;
+  background: transparent;
+  font-size: 14px;
+  font-family: "SF Pro", "Canva Sans", -apple-system, BlinkMacSystemFont, sans-serif;
+  outline: none;
+}
+
+.preview-composer-input::placeholder {
+  color: rgba(15, 18, 26, 0.5);
+}
+
+.preview-composer-send {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+/* Next screen overlay */
+.next-screen-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+}
+
+.next-screen-message {
+  background: #fff;
+  padding: 32px;
+  border-radius: 16px;
+  max-width: 400px;
+  max-height: 90vh;
+  overflow-y: auto;
+  text-align: center;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+}
+
+.next-screen-message p {
+  margin: 0 0 16px;
+  font-size: 16px;
+}
+
+.next-screen-note {
+  font-size: 14px;
+  color: #5d5d5d !important;
+  margin-bottom: 24px !important;
+}
+
+.next-screen-message button {
+  padding: 10px 20px;
+  background: #0d0d0d;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.next-screen-message button:hover {
+  opacity: 0.9;
+}

@@ -1,0 +1,14 @@
+---
+description: Always include README.md context for frontend development
+globs: ['**/*']
+alwaysApply: true
+---
+
+# Frontend Project Context
+
+Always reference the project README.md for:
+- Prerequisites and setup instructions
+- Development workflow
+- Build and deployment processes
+
+@../../README.md

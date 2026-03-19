@@ -1,0 +1,45 @@
+/* Desktop navigation container - only apply to non-mobile views */
+.navigation-container {
+  height: 100%;
+  /* width: 100%; */
+  position: absolute;
+  flex-direction: column;
+}
+
+/* Desktop header - only apply to non-mobile views */
+.header-container {
+  height: 56px;
+  width: 100%;
+  background-color: #fff;
+  background: rgb(2, 0, 36);
+  background-image: linear-gradient(90deg, rgb(0, 196, 204), rgb(125, 42, 232));
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  top: 0;
+  position: fixed;
+  z-index: 1000;
+}
+
+/* Side container is now defined in side-nav.css */
+
+/* Desktop footer - only apply to non-mobile views */
+.footer-container {
+  height: 40px;
+  width: 100%;
+  position: fixed;
+  bottom: 0;
+  background-color: #fff;
+  z-index: 1000;
+}
+
+/* Desktop main container - only apply to non-mobile views */
+.main-container {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  width: 100%;
+  padding-bottom: 100px;
+  /* Space for preview panel */
+  overflow: auto;
+}

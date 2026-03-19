@@ -1,0 +1,268 @@
+/* Canvas elements */
+.canvasElement {
+  position: absolute;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: border 0.2s;
+  border: 2px solid #8b3dff00;
+}
+
+.canvasElement:hover {
+  border: 1px dashed #8b3dff;
+}
+
+.canvasElement img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.imageElement {
+  border: 2px solid #8b3dff00;
+  width: 298px;
+  height: 151px;
+}
+
+.shapeElement {
+  border: 2px solid #8b3dff00;
+  width: 151px;
+  height: 151px;
+}
+
+.textElement {
+  border: 2px solid #8b3dff00;
+  width: 298px;
+  height: 151px;
+}
+
+/* Element hover state */
+.canvasElement.hovering {
+  border: 2px solid #8b3dff;
+}
+
+/* Element selected state */
+.canvasElement.selected {
+  border: 2px solid #8b3dff;
+  /* Show a slight outline to separate from the border */
+  /* outline: 1px solid rgba(255, 255, 255, 0.8); */
+  outline-offset: -1px;
+}
+
+/* Resize handles */
+.resizeHandle {
+  position: absolute;
+  background-color: white;
+  border: 2px solid #8b3dff;
+  z-index: 10;
+}
+
+/* Corner handles */
+.resizeHandle.corner {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+
+.topLeft {
+  top: -5px;
+  left: -5px;
+  cursor: nwse-resize;
+}
+
+.topRight {
+  top: -5px;
+  right: -5px;
+  cursor: nesw-resize;
+}
+
+.bottomLeft {
+  bottom: -5px;
+  left: -5px;
+  cursor: nesw-resize;
+}
+
+.bottomRight {
+  bottom: -5px;
+  right: -5px;
+  cursor: nwse-resize;
+}
+
+/* Side handles */
+.resizeHandle.side {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+
+.top {
+  top: -5px;
+  left: 50%;
+  transform: translateX(-50%);
+  cursor: ns-resize;
+}
+
+.right {
+  top: 50%;
+  right: -5px;
+  transform: translateY(-50%);
+  cursor: ew-resize;
+}
+
+.bottom {
+  bottom: -5px;
+  left: 50%;
+  transform: translateX(-50%);
+  cursor: ns-resize;
+}
+
+.left {
+  top: 50%;
+  left: -5px;
+  transform: translateY(-50%);
+  cursor: ew-resize;
+}
+
+/* Rotation handle */
+.rotateHandle {
+  position: absolute;
+  width: 24px;
+  height: 24px;
+  background-color: white;
+  border: 1px solid #cccccc;
+  border-radius: 50%;
+  bottom: -32px;
+  left: 50%;
+  transform: translateX(-50%);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+  transition: all 0.2s ease;
+}
+
+.rotateHandle::before {
+  content: "";
+  position: absolute;
+  height: 8px;
+  width: 1px;
+  background-color: #cccccc;
+  top: -8px;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.rotateHandle::after {
+  content: "";
+  background-image: url("/icons/toolbars/rotate-handle.svg");
+  background-size: 16px 16px;
+  background-position: center;
+  background-repeat: no-repeat;
+  width: 16px;
+  height: 16px;
+  display: block;
+}
+
+.rotateHandle:hover {
+  background-color: #8b3dff;
+  border-color: #8b3dff;
+  transform: translateX(-50%) scale(1.1);
+}
+
+.rotateHandle:hover::before {
+  background-color: #8b3dff;
+}
+
+.rotateHandle:hover::after {
+  filter: brightness(0) invert(1);
+}
+
+/* Selection toolbar */
+.selectionToolbar {
+  position: absolute;
+  top: -48px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 100;
+  filter: drop-shadow(0px 2px 4px rgba(0, 0, 0, 0.1));
+  width: 170px;
+  height: 42px;
+  box-sizing: content-box;
+  pointer-events: auto;
+}
+
+.selectionToolbarSvg {
+  width: 170px;
+  height: 42px;
+  display: block;
+  max-width: none;
+  max-height: none;
+  min-width: 170px;
+  min-height: 42px;
+  object-fit: contain;
+  object-position: center;
+}
+
+.videoElement {
+  /* min-width: 240px; */
+  width: 298px;
+  height: 151px;
+  border-radius: 4px;
+}
+
+.videoElement video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 4px;
+}
+
+.videoContainer {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.videoOverlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.2);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.videoOverlay:hover {
+  background-color: rgba(0, 0, 0, 0.4);
+}
+
+.playButton {
+  width: 60px;
+  height: 60px;
+  background-color: rgba(255, 255, 255, 0.8);
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+}
+
+.playButton::before {
+  content: "";
+  width: 0;
+  height: 0;
+  border-top: 15px solid transparent;
+  border-bottom: 15px solid transparent;
+  border-left: 25px solid #8b3dff;
+  margin-left: 5px;
+}
+
+.videoElement.selected video {
+  border: 2px solid #8b3dff;
+}

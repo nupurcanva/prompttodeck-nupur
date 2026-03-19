@@ -1,0 +1,28 @@
+/* DynamicToolbar Styles */
+
+.toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    padding: 8px 12px;
+    background: white;
+    border-bottom: 1px solid #e5e5e5;
+    gap: 4px;
+}
+
+.toolbarDivider {
+    width: 1px;
+    height: 32px;
+    background-color: #e0e0e0;
+    margin: 0 4px;
+}
+
+/* Support for different toolbar themes if needed */
+.toolbar.dark {
+    background: #2b2b2b;
+    border-bottom-color: #3a3a3a;
+}
+
+.toolbar.dark .toolbarDivider {
+    background-color: #444;
+}

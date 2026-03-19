@@ -1,0 +1,455 @@
+---
+alwaysApply: false
+description: "Load this rule when working with @canva-ct/genai package on any AI integrations, chatbots, text generation, image generation, text-to-speech (TTS) or any features using the @canva-ct/genai package. "
+---
+
+# @canva-ct/genai
+
+Generative AI services with LLM streaming, OpenRouter integration, fal.ai media generation, and Text-to-Speech capabilities.
+
+## 📦 Installation
+
+```bash
+npm install @canva-ct/genai
+```
+
+## 🔐 Setup (Required)
+
+Before using any services, you must call `setupAuth()` once at the start of your application:
+
+```typescript
+import { setupAuth } from "@canva-ct/genai";
+
+// Call once at app startup
+await setupAuth();
+```
+
+**React Example:**
+
+```typescript
+import { setupAuth } from "@canva-ct/genai";
+import { useEffect } from "react";
+
+function App() {
+  useEffect(() => {
+    setupAuth();
+  }, []);
+
+  return <YourApp />;
+}
+```
+
+This function:
+
+- Initializes authentication with `@canva-ct/auth`
+- Fetches the GenAI service configuration from Canva playground
+- Must complete before any AI service calls will work
+
+## 📑 Table of Contents
+
+- [Installation](#-installation)
+- [Setup (Required)](#-setup-required)
+- [Available Modules](#-available-modules)
+- [Quick Reference](#-quick-reference)
+- [AIService (Recommended for LLM)](#-aiservice-recommended)
+  - [Available Models](#available-models)
+  - [Methods](#methods)
+    - [chat()](#chatrequest-callbacks---chat-with-ai) - Chat completion with streaming & tools
+    - [generateImage()](#generateimagerequest-callbacks---generate-images) - AI image generation
+    - [isConfigured()](#isconfigured---check-authentication) - Check auth status
+  - [Multimodal Support](#multimodal-support) - Images & audio analysis
+- [fal.ai Module](#-falai-module)
+  - [Methods](#methods-1)
+    - [fal.subscribe()](#falsubscribemodelid-options---queue-based-recommended) - Queue-based execution
+    - [fal.run()](#falrunmodelid-options---direct-execution) - Direct execution
+  - [Popular Models](#popular-models) - Image, video, audio models
+  - [Examples](#examples)
+- [OpenRouter Module](#-openrouter-module)
+  - [Methods](#methods-2)
+    - [chat()](#chatrequest---chat-completion) - Chat completion
+    - [generateImage()](#generateimageoptions---image-generation) - Image generation
+    - [listModels()](#listmodels---list-available-models) - List models
+    - [request()](#requestendpoint-method-data---raw-api-access) - Raw API access
+- [TTS Module](#-tts-module)
+  - [Methods](#methods-3)
+    - [speak()](#speakoptions---generate--play-audio) - Generate & play audio
+    - [synthesize()](#synthesizeoptions---get-audio-blob) - Get audio blob
+    - [stop()](#stop---stop-playback) - Stop playback
+  - [Options](#options) - Models, voices, formats
+- [Integration](#-integration)
+- [Troubleshooting](#-troubleshooting)
+
+## 📚 Available Modules
+
+| Module         | Import                       | Description                                                     |
+| -------------- | ---------------------------- | --------------------------------------------------------------- |
+| **AIService**  | `@canva-ct/genai`            | Unified AI interface with automatic routing, multimodal support |
+| **fal.ai**     | `@canva-ct/genai/fal`        | 600+ generative media models (image, video, audio)              |
+| **OpenRouter** | `@canva-ct/genai/openrouter` | Direct OpenRouter API access                                    |
+| **TTS**        | `@canva-ct/genai/tts`        | Text-to-Speech with OpenAI voices                               |
+
+## 🔑 Quick Reference
+
+```typescript
+// AIService - Unified interface (recommended)
+import { AIService } from "@canva-ct/genai";
+const ai = new AIService();
+await ai.chat({ messages, model });
+await ai.generateImage({ prompt });
+
+// fal.ai - 600+ media models
+import { fal } from "@canva-ct/genai/fal";
+await fal.subscribe("fal-ai/nano-banana-pro", { input: { prompt } });
+
+// OpenRouter - Direct API
+import { OpenRouterService } from "@canva-ct/genai/openrouter";
+const openrouter = new OpenRouterService();
+await openrouter.chat({ messages, model });
+
+// TTS - Text-to-Speech
+import { TTSService } from "@canva-ct/genai/tts";
+const tts = new TTSService();
+await tts.speak({ input: "Hello", model: "tts-1", voice: "coral" });
+```
+
+---
+
+## 🚀 AIService (Recommended)
+
+The `AIService` provides a unified interface for all GenAI capabilities with automatic routing.
+
+```typescript
+import { AIService } from "@canva-ct/genai";
+
+const ai = new AIService({ defaultModel: "openai/gpt-4o" });
+```
+
+### Available Models
+
+| Provider   | Models                                                     |
+| ---------- | ---------------------------------------------------------- |
+| Google     | `google/gemini-2.5-flash`, `google/gemini-2.5-pro`         |
+| Anthropic  | `anthropic/claude-sonnet-4.5`, `anthropic/claude-opus-4.1` |
+| OpenAI     | `openai/gpt-5`, `openai/gpt-5-mini`                        |
+| Perplexity | `perplexity/sonar-reasoning-pro`, `perplexity/sonar-pro`   |
+
+Full list: [OpenRouter Models](https://openrouter.ai/models)
+
+### Methods
+
+#### `chat(request, callbacks?)` - Chat with AI
+
+```typescript
+// Simple chat
+const response = await ai.chat({
+  messages: [{ role: "user", content: "Hello!" }],
+  model: "openai/gpt-4o-mini",
+});
+console.log(response.content);
+
+// Streaming
+const emitter = ai.chat(
+  {
+    messages: [{ role: "user", content: "Tell me a story" }],
+    stream: true,
+  },
+  {
+    onMessage: (msg) => console.log(msg.content),
+    onComplete: (response) => console.log("Done!"),
+  }
+);
+
+// With tools (auto-routes to agentic service)
+const response = await ai.chat({
+  messages: [{ role: "user", content: "Show notification" }],
+  tools: [
+    {
+      name: "notify",
+      description: "Show notification",
+      parameters: {
+        type: "object",
+        properties: { message: { type: "string" } },
+        required: ["message"],
+      },
+    },
+  ],
+});
+```
+
+#### `generateImage(request, callbacks?)` - Generate Images
+
+```typescript
+const result = await ai.generateImage({
+  prompt: "A sunset over mountains",
+  model: "google/gemini-2.5-flash-image-preview",
+});
+console.log(result.imageUrl); // base64 data URL
+
+// With reference image
+const result = await ai.generateImage({
+  prompt: "Transform to oil painting style",
+  referenceImages: imageBase64,
+});
+```
+
+#### `isConfigured()` - Check Authentication
+
+```typescript
+if (ai.isConfigured()) {
+  console.log("Ready!");
+}
+```
+
+### Multimodal Support
+
+**Image Analysis:**
+
+```typescript
+const response = await ai.chat({
+  messages: [
+    {
+      role: "user",
+      content: [
+        { type: "text", text: "What's in this image?" },
+        { type: "image_url", image_url: { url: imageBase64 } },
+      ],
+    },
+  ],
+  model: "openai/gpt-4o",
+});
+```
+
+**Audio Analysis:**
+
+```typescript
+const response = await ai.chat({
+  messages: [
+    {
+      role: "user",
+      content: [
+        { type: "text", text: "Transcribe this audio" },
+        {
+          type: "input_audio",
+          input_audio: { data: audioBase64, format: "wav" },
+        },
+      ],
+    },
+  ],
+  model: "google/gemini-2.5-flash",
+});
+```
+
+---
+
+## 🎨 fal.ai Module
+
+Access 100+ production-ready generative media models through fal.ai's unified API.
+
+```typescript
+import { fal } from "@canva-ct/genai/fal";
+```
+
+### Key Features
+
+- **100+ models**: Image, video, voice, and audio generation
+- **Pre-configured auth**: Automatic token injection
+- **Lambda endpoint**: 300s timeout for long-running jobs
+
+### Methods
+
+#### `fal.subscribe(modelId, options)` - Queue-based (Recommended)
+
+```typescript
+const result = await fal.subscribe("fal-ai/nano-banana-pro", {
+  input: {
+    prompt: "A cute puppy in pixar style",
+    image_size: "square_hd",
+    num_images: 1,
+  },
+  logs: true,
+  onQueueUpdate: (update) => {
+    if (update.status === "IN_PROGRESS") console.log("Processing...");
+  },
+});
+
+console.log(result.data.images[0].url);
+```
+
+#### `fal.run(modelId, options)` - Direct Execution
+
+```typescript
+const result = await fal.run("fal-ai/flux/schnell", {
+  input: { prompt: "A beautiful sunset" },
+});
+```
+
+### Popular Models
+
+| Category             | Models                                                                                                        |
+| -------------------- | ------------------------------------------------------------------------------------------------------------- |
+| **Image Generation** | `fal-ai/nano-banana-pro`, `fal-ai/flux/schnell`, `fal-ai/flux-pro/v1.1`                                       |
+| **Video Generation** | `fal-ai/veo3.1/fast`, `openai/sora-2`, `fal-ai/kling-video/v1/standard/image-to-video`                        |
+| **Avatar & Lipsync** | `veed/fabric-1.0`, `creatify/lipsync`, `bytedance/omnihuman/v1.5`, `ai-avatar/single-text`, `sync-lipsync/v2` |
+| **Image Editing**    | `fal-ai/nano-banana-pro/edit`, `fal-ai/inpaint`, `fal-ai/rembg`                                               |
+| **Audio & Voice**    | `fal-ai/f5-tts`, `fal-ai/whisper`                                                                             |
+
+Explore all models: [fal.ai/explore](https://fal.ai/explore)
+
+### Examples
+
+```typescript
+// Generate multiple images
+const result = await fal.subscribe("fal-ai/nano-banana-pro", {
+  input: { prompt: "Futuristic city", num_images: 1, image_size: "square_hd" },
+});
+
+// Image-to-image
+const result = await fal.subscribe("fal-ai/flux/dev/image-to-image", {
+  input: {
+    prompt: "Oil painting style",
+    image_url: [imageBase64], // base64 or URL
+    strength: 0.75,
+  },
+});
+
+// Background removal
+const result = await fal.run("fal-ai/bria/background/remove", {
+  input: { image_url: imageBase64 },
+});
+```
+
+Explore all models: [fal.ai/explore](https://fal.ai/explore)
+
+---
+
+## 🌐 OpenRouter Module
+
+Direct OpenRouter API access for advanced use cases.
+
+```typescript
+import { OpenRouterService } from "@canva-ct/genai/openrouter";
+
+const openrouter = new OpenRouterService();
+```
+
+### Methods
+
+#### `chat(request)` - Chat Completion
+
+```typescript
+// Non-streaming
+const response = await openrouter.chat({
+  messages: [{ role: "user", content: "Hello!" }],
+  model: "openai/gpt-4o",
+});
+console.log(response.choices[0].message.content);
+
+// Streaming
+const emitter = openrouter.chat({
+  messages: [{ role: "user", content: "Tell a story" }],
+  model: "openai/gpt-4o",
+  stream: true,
+});
+emitter.on("chunk", (r) => console.log(r.choices[0].delta.content));
+emitter.on("complete", (r) => console.log("Done"));
+```
+
+#### `generateImage(options)` - Image Generation
+
+```typescript
+const response = await openrouter.generateImage({
+  prompt: "Sunset over mountains",
+  model: "google/gemini-2.5-flash-image-preview",
+});
+```
+
+#### `listModels()` - List Available Models
+
+```typescript
+const models = await openrouter.listModels();
+models.data.forEach((m) => console.log(m.id, m.name));
+```
+
+#### `request(endpoint, method, data?)` - Raw API Access
+
+```typescript
+const response = await openrouter.request("/v1/auth/key", "GET");
+```
+
+---
+
+## 🔊 TTS Module
+
+Text-to-Speech using OpenAI's TTS models.
+
+```typescript
+import { TTSService } from "@canva-ct/genai/tts";
+
+const tts = new TTSService();
+```
+
+### Methods
+
+#### `speak(options)` - Generate & Play Audio
+
+```typescript
+const audio = await tts.speak({
+  input: "Hello, world!",
+  model: "gpt-4o-mini-tts",
+  voice: "coral",
+  instructions: "Speak cheerfully",
+  autoplay: true,
+});
+
+// Manual control
+audio.pause();
+audio.play();
+```
+
+#### `synthesize(options)` - Get Audio Blob
+
+```typescript
+const blob = await tts.synthesize({
+  input: "Save this audio",
+  model: "tts-1-hd",
+  voice: "nova",
+  response_format: "mp3",
+});
+
+// Download
+const url = URL.createObjectURL(blob);
+const a = document.createElement("a");
+a.href = url;
+a.download = "speech.mp3";
+a.click();
+```
+
+#### `stop()` - Stop Playback
+
+```typescript
+tts.stop();
+```
+
+### Options
+
+| Models                                 | Voices                                                             | Formats                                    |
+| -------------------------------------- | ------------------------------------------------------------------ | ------------------------------------------ |
+| `tts-1`, `tts-1-hd`, `gpt-4o-mini-tts` | `alloy`, `ash`, `coral`, `echo`, `nova`, `onyx`, `sage`, `shimmer` | `mp3`, `opus`, `aac`, `flac`, `wav`, `pcm` |
+
+---
+
+## 🔗 Integration
+
+This package integrates with:
+
+- **@canva-ct/auth**: Automatic authentication
+- **@canva-ct/logger**: Structured logging
+
+## 🐛 Troubleshooting
+
+| Issue                  | Solution                                                |
+| ---------------------- | ------------------------------------------------------- |
+| Authentication errors  | Call `setupAuth()` before using services                |
+| Streaming stuck        | Use `forceReset()` to clear streams                     |
+| Image generation fails | Use compatible model (Google Gemini)                    |
+| Model not found        | Check [OpenRouter Models](https://openrouter.ai/models) |

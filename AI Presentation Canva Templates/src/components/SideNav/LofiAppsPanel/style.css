@@ -1,0 +1,256 @@
+/* Import shared scrollable styles */
+@import url("../shared/scrollable.css");
+
+.lofi-apps-panel {
+  /* width: 320px; */
+  height: 100%;
+  /* background-color: #f9f9f9; */
+  overflow-y: auto;
+  padding: 0;
+  /* Remove padding from the main container */
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Dropdown Styles */
+.lofi-apps-dropdown {
+  padding: 12px 16px;
+  background-color: #f9f9f9;
+  border-bottom: 1px solid #eeeeee;
+}
+
+.lofi-apps-dropdown-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: #eeeeee;
+  border-radius: 6px;
+  padding: 10px 14px;
+  cursor: pointer;
+}
+
+.lofi-apps-dropdown-content span {
+  font-size: 15px;
+  font-weight: 500;
+  color: #333;
+}
+
+.lofi-apps-dropdown-chevron {
+  color: #666;
+}
+
+/* Sticky Header Styles */
+.lofi-apps-sticky-header {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  /* background-color: #f9f9f9; */
+  padding: 16px 16px 0 16px;
+  border-bottom: 1px solid #eeeeee;
+}
+
+/* Scrollable Content Styles */
+.lofi-apps-scrollable-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0 16px 16px 16px;
+  padding-bottom: 100px;
+}
+
+/* Search Bar Styles */
+.lofi-apps-search-container {
+  margin-bottom: 16px;
+}
+
+.lofi-apps-search-bar {
+  display: flex;
+  align-items: center;
+  background-color: #f0f0f0;
+  border-radius: 4px;
+  padding: 8px 12px;
+}
+
+.lofi-apps-search-icon {
+  color: #666;
+  margin-right: 8px;
+}
+
+.lofi-apps-search-bar input {
+  border: none;
+  background: transparent;
+  width: 100%;
+  outline: none;
+  font-size: 14px;
+}
+
+/* Tabs Styles */
+.lofi-apps-tabs {
+  display: flex;
+  border-bottom: 1px solid #e0e0e0;
+  margin-bottom: 16px;
+}
+
+.lofi-apps-tab {
+  flex: 1;
+  background: none;
+  border: none;
+  padding: 12px 8px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #666;
+  cursor: pointer;
+  position: relative;
+}
+
+.lofi-apps-tab.active {
+  color: #6366f1;
+}
+
+.lofi-apps-tab.active::after {
+  content: "";
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background-color: #6366f1;
+}
+
+/* Section Styles */
+.lofi-apps-content {
+  padding-bottom: 20px;
+}
+
+.lofi-apps-section {
+  margin-bottom: 24px;
+}
+
+.lofi-apps-section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.lofi-apps-section-header h3 {
+  font-size: 16px;
+  font-weight: 600;
+  color: #333;
+  margin: 0;
+}
+
+.lofi-apps-see-all {
+  font-size: 14px;
+  color: #666;
+  text-decoration: none;
+}
+
+/* Grid Styles */
+.lofi-apps-grid {
+  display: grid;
+  gap: 8px;
+  position: relative;
+}
+
+/* Featured and trending item styles */
+.horizontal-scroll .lofi-app-item {
+  flex: 0 0 calc(50% - 4px);
+}
+
+/* Special styling for featured apps */
+.lofi-apps-section:first-of-type .lofi-app-item {
+  /* border: 2px solid #8B5CF6; */
+  border-radius: 10px;
+}
+
+.more-canva-grid {
+  grid-template-columns: repeat(3, 1fr);
+}
+
+.team-apps-grid {
+  grid-template-columns: repeat(4, 1fr);
+}
+
+/* App Item Styles */
+.lofi-app-item {
+  /* background-color: #f0f0f0; */
+  border-radius: 8px;
+  overflow: hidden;
+  position: relative;
+}
+
+.lofi-app-item.canva-app {
+  background-color: #f0f0f000;
+}
+
+.lofi-app-item-content {
+  padding-top: 100%;
+  /* 1:1 Aspect Ratio */
+  position: relative;
+}
+
+.lofi-app-item.small .lofi-app-item-content {
+  padding-top: 80%;
+  /* Different aspect ratio for small items */
+}
+
+/* Make team apps grid items square */
+.team-apps-grid .lofi-app-item.small .lofi-app-item-content {
+  padding-top: 100%;
+  /* Square aspect ratio for team app items */
+}
+
+.lofi-app-item-svg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* Next Button Styles */
+.lofi-apps-next-button {
+  position: absolute;
+  right: -12px;
+  top: 50%;
+  transform: translateY(-50%);
+  background-color: white;
+  border: 1px solid #e0e0e0;
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  z-index: 2;
+}
+
+/* Empty state styles */
+.lofi-apps-empty-state {
+  text-align: center;
+  padding: 40px 20px;
+}
+
+.lofi-apps-empty-state p {
+  color: #666;
+  margin-bottom: 16px;
+}
+
+.lofi-apps-browse-button {
+  background-color: #6366f1;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 8px 16px;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+/* Special styling for featured apps */
+.horizontal-scroll .lofi-app-item {
+  border-radius: 8px;
+}

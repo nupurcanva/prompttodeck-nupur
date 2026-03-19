@@ -1,0 +1,21 @@
+<svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<g clip-path="url(#clip0_700_35026)">
+<g clip-path="url(#clip1_700_35026)">
+<rect width="24" height="24" transform="translate(4 4)" fill="url(#pattern0_700_35026)" fill-opacity="0.15"/>
+<rect x="4" y="4" width="24" height="24" fill="#080A74"/>
+</g>
+</g>
+<rect x="4.5" y="4.5" width="23" height="23" rx="11.5" stroke="#394C60" stroke-opacity="0.15"/>
+<defs>
+<pattern id="pattern0_700_35026" patternContentUnits="objectBoundingBox" width="1" height="1">
+<use xlink:href="#image0_700_35026" transform="scale(0.015625)"/>
+</pattern>
+<clipPath id="clip0_700_35026">
+<rect x="4" y="4" width="24" height="24" rx="12" fill="white"/>
+</clipPath>
+<clipPath id="clip1_700_35026">
+<rect width="24" height="24" fill="white" transform="translate(4 4)"/>
+</clipPath>
+<image id="image0_700_35026" width="64" height="64" preserveAspectRatio="none" xlink:href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAACqaXHeAAAA40lEQVR4Xu3bQQ6EQAhEUbj/oXsO8Sdh4XOvJAi/qkF3Zt6E6710++xuiD6T40uACtACqYlzD2IACFKBkoHcgmSQDJJBMngKIT6ADygF6DSYfcCLTzg/z0eGrASogDbT0gKxB2MB5pkiBoBgrEEMwIBjLx9fAAiCIAhygmkkRgYjhWMHditsL2AvYC+QIHjdwzk+BmAABmBAWc1kCF0bKRAEQRAEQRAMGaACbaCUz/P5BRiKxhQaiV07uRjfYgQDMKDpGAhGCMUCzD4CBEEw1iAGYIBPZMJh+g8/P8cKpAJfV4EfMee/sLtaEFIAAAAASUVORK5CYII="/>
+</defs>
+</svg>

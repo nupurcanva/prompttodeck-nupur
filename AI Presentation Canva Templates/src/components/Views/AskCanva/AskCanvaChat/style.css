@@ -1,0 +1,84 @@
+/* Ask Canva Chat Overlay - Bubble/Popover Style */
+.ask-canva-chat-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-end;
+  z-index: 1000001;
+  backdrop-filter: blur(4px);
+  padding-right: 20px;
+  padding-bottom: 20px;
+}
+
+.ask-canva-chat-container {
+  width: 400px;
+  max-width: 90vw;
+  max-height: 80vh;
+  border-radius: 16px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+  position: relative;
+  min-height: 700px;
+  background-color: rgb(255, 255, 255);
+  background-image:
+    linear-gradient(rgba(0, 0, 0, 0) 0px, rgb(255, 255, 255) 40%),
+    radial-gradient(
+      circle at 1.42% 4.44%,
+      rgba(0, 196, 204, 0.3) 0px,
+      rgba(90, 50, 250, 0.3) 49.99%,
+      rgba(125, 42, 232, 0.3) 50%
+    ),
+    none;
+}
+
+.ask-canva-chat-container .canva-ai-panel {
+  height: 100%;
+  border-radius: 16px;
+  overflow: hidden;
+  background: transparent;
+}
+
+.ask-canva-chat-container .wonderbox-container {
+  margin-bottom: 10px;
+}
+
+.ask-canva-chat-container .bg-white {
+  background-color: transparent !important;
+}
+
+.ask-canva-chat-container .wonderbox-container {
+  box-shadow: none !important;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .ask-canva-chat-container {
+    width: 95vw;
+    max-height: 85vh;
+    min-height: 600px;
+  }
+}
+
+@media (max-width: 480px) {
+  .ask-canva-chat-container {
+    width: 100vw;
+    max-height: 100vh;
+    min-height: 100vh;
+    border-radius: 0;
+  }
+
+  .ask-canva-chat-overlay {
+    padding-right: 0;
+    padding-bottom: 0;
+  }
+
+  .ask-canva-chat-container .canva-ai-panel {
+    border-radius: 0;
+  }
+}

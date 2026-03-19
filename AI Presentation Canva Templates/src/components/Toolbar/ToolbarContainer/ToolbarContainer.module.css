@@ -1,0 +1,24 @@
+.toolbarContainer {
+  position: fixed;
+  top: 72px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1000;
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  pointer-events: none;
+  transition: left 0.3s ease;
+}
+
+/* Adjust toolbar position when home menu is expanded in presentation view */
+:global(.presentation-view.menu-expanded) .toolbarContainer {
+  left: calc(50% + 180px);
+  /* Shift right by half the menu width */
+}
+
+/* Adjust toolbar position when both home menu and side panel are open */
+:global(body.has-side-panel-open .presentation-view.menu-expanded) .toolbarContainer {
+  left: calc(50% + 10px);
+  /* Fine-tuned to center on the scaled and positioned canvas */
+}

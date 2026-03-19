@@ -1,0 +1,208 @@
+/* Import shared scrollable styles */
+@import url("../shared/scrollable.css");
+
+/* Lo-fi Design Panel Styles */
+.lofi-design-panel {
+  height: 100%;
+  width: 100%;
+  /* background-color: #f9f9f9; */
+  overflow-y: auto;
+  position: relative;
+  padding-bottom: 20px;
+}
+
+/* Sticky header section */
+.lofi-sticky-header {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background-color: #fff;
+  /* padding-bottom: 16px; */
+}
+
+
+.lofi-design-panel .lofi-search-container {
+  margin-bottom: 0px;
+  padding: 16px 16px 0 16px;
+}
+
+
+.lofi-generate-images-button-container {
+  margin-top: 10px;
+}
+
+.lofi-search-bar {
+  display: flex;
+  align-items: center;
+  background-color: #f0f0f0;
+  border-radius: 4px;
+  padding: 8px 12px;
+  width: 100%;
+}
+
+.lofi-search-icon {
+  margin-right: 8px;
+  display: flex;
+  align-items: center;
+  color: #666;
+}
+
+.lofi-search-bar input {
+  flex: 1;
+  border: none;
+  background: transparent;
+  outline: none;
+  font-size: 14px;
+  color: #333;
+}
+
+.lofi-filter-icon {
+  margin-left: 8px;
+  display: flex;
+  align-items: center;
+}
+
+/* Tabs are now handled by BasicTabs component */
+
+/* Section Styles */
+.lofi-section-container {
+  margin-bottom: 24px;
+  /* padding: 0 16px; */
+}
+
+.lofi-section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.lofi-section-header h3 {
+  font-size: 16px;
+  font-weight: 600;
+  color: #333;
+  margin: 0;
+}
+
+.lofi-see-all-link {
+  font-size: 14px;
+  color: #666;
+  text-decoration: none;
+}
+
+.lofi-see-all-link:hover {
+  color: #8363d6;
+  text-decoration: underline;
+}
+
+/* Cards */
+.lofi-card-item {
+  min-width: 220px;
+  height: 44px;
+  background-color: #ffffff;
+  border-radius: 8px;
+  border: 1.3px solid #2b3b4a4d;
+  margin-right: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+
+
+
+
+
+}
+
+.lofi-card-item::before {
+  content: "";
+  width: 60%;
+  height: 8px;
+  background-color: #e1e4e7;
+  border-radius: 4px;
+}
+
+/* Grid Items */
+.lofi-items-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+}
+
+.lofi-design-panel .lofi-grid-item {
+  aspect-ratio: 10 / 12;
+  background-color: #f0f0f0;
+  border-radius: 4px;
+}
+
+.lofi-tabs-container {
+  padding: 0 16px;
+}
+
+.lofi-grid-item-large {
+  min-width: 150px;
+  aspect-ratio: 1 / 1;
+  background-color: #f0f0f0;
+  border-radius: 4px;
+}
+
+/* Next Button Overlay */
+.lofi-next-button {
+  position: absolute;
+  right: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  background-color: #ffffff;
+  border-radius: 50%;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  cursor: pointer;
+}
+
+.lofi-next-button-cards {
+  top: 25px;
+  right: 8px;
+}
+
+.lofi-next-button-recent {
+  top: 90px;
+  right: 16px;
+}
+
+.lofi-next-button svg {
+  width: 16px;
+  height: 16px;
+}
+
+/* Purple Border */
+.lofi-filter-scroll::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 16px;
+  width: 70px;
+  height: 2px;
+  background-color: #8363d6;
+  border-radius: 1px;
+}
+
+/* Scrollable content below sticky header */
+.lofi-scrollable-content {
+  padding-top: 8px;
+  padding-bottom: 100px;
+  padding: 8px 16px 100px 16px;
+}
+
+/* Template cards container */
+.lofi-sticky-header .scrollable-container {
+  padding: 0 16px;
+  /* margin-bottom: 16px; */
+}
+
+.lofi-sticky-header .horizontal-scroll {
+  /* padding-right: 40px; */
+  /* Space for the fade effect */
+  padding-bottom: 4px;
+}

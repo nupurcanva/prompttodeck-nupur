@@ -1,0 +1,239 @@
+/* Brand Panel Main Container */
+.lofi-brand-panel {
+  display: flex;
+  flex-direction: column;
+  padding: 16px 16px 110px 16px;
+  gap: 20px;
+  width: 100%;
+  height: 100%;
+  overflow-y: auto;
+  background-color: white;
+}
+
+/* Brand Section */
+.lofi-brand-section {
+  width: 100%;
+  margin-bottom: 4px;
+}
+
+/* Section Headers */
+.lofi-brand-section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.lofi-brand-section-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.lofi-brand-section-title h3,
+.lofi-brand-section-header h3 {
+  font-size: 14px;
+  font-weight: 600;
+  color: #333;
+  margin: 0;
+}
+
+.lofi-brand-see-all {
+  color: #8a3ff8;
+  font-size: 14px;
+  text-decoration: none;
+}
+
+/* Scrollable Rows */
+.lofi-brand-scrollable-container {
+  position: relative;
+  width: 100%;
+  margin-bottom: 8px;
+}
+
+.lofi-brand-scrollable-row {
+  display: flex;
+  overflow-x: auto;
+  gap: 8px;
+  padding-bottom: 8px;
+  position: relative;
+  scrollbar-width: none;
+  /* Firefox */
+  -ms-overflow-style: none;
+  /* IE and Edge */
+}
+
+.lofi-brand-scrollable-row::-webkit-scrollbar {
+  display: none;
+  /* Chrome, Safari, Opera */
+}
+
+.lofi-brand-fade-left,
+.lofi-brand-fade-right {
+  position: absolute;
+  top: 0;
+  bottom: 8px;
+  width: 40px;
+  pointer-events: none;
+  z-index: 1;
+  opacity: 1;
+  transition: opacity 0.3s ease;
+}
+
+.lofi-brand-fade-left.hidden,
+.lofi-brand-fade-right.hidden {
+  opacity: 0;
+}
+
+.lofi-brand-fade-left.visible,
+.lofi-brand-fade-right.visible {
+  opacity: 1;
+}
+
+.lofi-brand-fade-left {
+  left: 0;
+  background: linear-gradient(90deg, rgba(255, 255, 255, 1) 0%, rgba(255, 255, 255, 0) 100%);
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  padding-left: 8px;
+}
+
+.lofi-brand-fade-right {
+  right: 0;
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0) 0%, rgba(255, 255, 255, 1) 100%);
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding-right: 8px;
+}
+
+.lofi-brand-item {
+  min-width: 80px;
+  height: 80px;
+  border-radius: 8px;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.lofi-brand-item-content {
+  width: 100%;
+  height: 100%;
+  background-color: #f5f5f5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.lofi-brand-scroll-arrow,
+.lofi-brand-scroll-arrow-left {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  /* background-color: white; */
+  border-radius: 50%;
+  /* box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1); */
+  cursor: pointer;
+  color: #666;
+  z-index: 2;
+}
+
+/* Nike Brand Kit */
+.lofi-brand-kit-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px;
+  /* background-color: #f9f9f9; */
+  border-radius: 8px;
+}
+
+.lofi-brand-kit-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 500;
+  color: #333;
+}
+
+.lofi-brand-dropdown-btn {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
+  color: #666;
+}
+
+/* Fonts Section */
+.lofi-brand-fonts-container {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.lofi-brand-font-item {
+  padding: 16px;
+  background-color: #f5f5f5;
+  border-radius: 8px;
+}
+
+.nike-heading {
+  font-size: 24px;
+  font-weight: 700;
+  color: #ddd;
+}
+
+.nike-subheading {
+  font-size: 20px;
+  font-weight: 500;
+  color: #ddd;
+}
+
+.body-text {
+  font-size: 16px;
+  font-weight: 400;
+  color: #ddd;
+}
+
+/* Color Sections */
+.lofi-brand-subsection {
+  margin-bottom: 16px;
+}
+
+.lofi-brand-subsection-title {
+  font-size: 14px;
+  font-weight: 500;
+  color: #333;
+  margin: 0 0 8px 0;
+}
+
+.lofi-brand-colors-container {
+  display: flex;
+  gap: 8px;
+}
+
+.lofi-brand-color-item {
+  width: 100%;
+  height: 60px;
+  border-radius: 8px;
+  border: 1px solid #eeeeee;
+}
+
+/* Color placeholders for the Canva design */
+.lofi-brand-color-placeholder {
+  width: 100%;
+  height: 48px;
+  background-color: #f0f0f0;
+  border-radius: 8px;
+  margin-bottom: 8px;
+}
+
+.lofi-brand-kit-progress svg {
+  width: 100%;
+  height: 100%;
+}

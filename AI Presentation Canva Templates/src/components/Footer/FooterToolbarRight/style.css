@@ -1,0 +1,133 @@
+.footer-toolbar-right {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.toolbar-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  border: none;
+  background: transparent;
+  border-radius: 4px;
+  padding: 6px 8px;
+  transition: background-color 0.2s ease;
+}
+
+.toolbar-button:hover {
+  background-color: rgba(57, 76, 96, 0.05);
+}
+
+.toolbar-icon-container {
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: rgba(57, 76, 96, 0.15);
+  border-radius: 8px;
+}
+
+.toolbar-button img {
+  width: 16px;
+  height: 16px;
+  opacity: 0.8;
+}
+
+.page-indicator {
+  display: flex;
+  align-items: center;
+  color: #394c60;
+  font-size: 14px;
+  margin-right: 5px;
+}
+
+.zoom-container {
+  display: flex;
+  align-items: center;
+}
+
+.zoom-level {
+  font-weight: 400;
+  color: #394c60;
+  margin-left: 8px;
+  font-size: 14px;
+}
+
+.slider-container {
+  position: relative;
+  width: 165px;
+  height: 2px;
+  border-radius: 1px;
+}
+
+.slider-track {
+  position: absolute;
+  left: 0;
+  top: 0;
+  height: 100%;
+  width: 100%;
+  background-color: rgba(43, 59, 74, 0.3);
+  border-radius: 1px;
+}
+
+.slider-fill {
+  position: absolute;
+  left: 0;
+  top: 0;
+  height: 100%;
+  width: 60%;
+  background-color: #0e1318;
+  border-radius: 1px;
+}
+
+.slider-handle {
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  background-color: #0e1318;
+  border: 2px solid white;
+  border-radius: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  left: 60%;
+  cursor: pointer;
+}
+
+.footer-toolbar-zoom-container {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.right-footer-toolbar-button .pill {
+  height: 24px;
+  width: 45px;
+}
+
+/* Responsive adjustments */
+@media screen and (max-width: 768px) {
+  .slider-container {
+    width: 120px;
+  }
+
+  .footer-toolbar-right {
+    gap: 15px;
+  }
+
+  .toolbar-button {
+    padding: 4px 6px;
+  }
+}
+
+@media screen and (max-width: 576px) {
+  .slider-container {
+    width: 80px;
+  }
+
+  .toolbar-button {
+    padding: 4px;
+  }
+}

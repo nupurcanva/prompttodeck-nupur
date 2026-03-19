@@ -1,0 +1,164 @@
+.presentation-wrapper {
+  display: flex;
+  height: 100vh;
+  width: 100%;
+  max-width: none;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  position: relative;
+}
+
+.presentation-view {
+  position: relative;
+  transition: padding-left 0.3s ease;
+  width: 100%;
+  height: 100vh;
+  overflow: hidden;
+}
+
+/* Position the menu completely off-screen initially */
+.presentation-view .home-menu {
+  position: fixed;
+  top: 0;
+  left: -360px;
+  height: 100vh;
+  width: 360px;
+  transition: left 0.3s ease;
+  z-index: 210;
+}
+
+/* When menu is expanded, bring it into view */
+.presentation-view.menu-expanded .home-menu {
+  left: 0;
+}
+
+/* Make sure both global and local menus appear together */
+.presentation-view .home-menu .menu-global {
+  width: 80px;
+}
+
+.presentation-view .home-menu .menu-local {
+  position: absolute;
+  left: 80px;
+  top: 0;
+  width: 280px;
+  transform: none;
+  opacity: 1;
+  visibility: visible;
+}
+
+/* Push the entire contents when menu is expanded */
+.presentation-view.menu-expanded {
+  padding-left: 360px;
+
+  box-shadow: 0 0 10px 0 rgba(0, 0, 0, 0.1);
+}
+
+/* Position the main containers */
+.presentation-view .navigation-container,
+.presentation-view .main-container {
+  transition: all 0.3s ease;
+}
+
+/* Position the side-container and push it when menu is expanded */
+.presentation-view .side-container {
+  transition: left 0.3s ease;
+}
+
+.presentation-view.menu-expanded .side-container {
+  left: 360px;
+}
+
+/* Style and position the side panel container */
+.side-panel-container {
+  width: 375px;
+  height: 100%;
+  position: fixed;
+  top: 56px;
+  left: 72px;
+  bottom: 0;
+  background-color: #ffffff;
+  border-right: 1px solid #e0e0e0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  overflow-y: auto;
+  z-index: 9;
+  transition: left 0.3s ease;
+}
+
+/* Push the side panel when menu is expanded */
+.presentation-view.menu-expanded .side-panel-container {
+  left: 432px;
+}
+
+/* Directly target and push the header when menu is expanded */
+.header-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  transition: all 0.3s ease;
+  z-index: 1000;
+}
+
+.presentation-view.menu-expanded .header-container {
+  left: 360px;
+  width: calc(100% - 360px);
+  border-top-left-radius: 16px;
+  border-top-right-radius: 16px;
+}
+
+/* Directly target and push the footer when menu is expanded */
+.footer-container {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  transition: all 0.3s ease;
+  z-index: 1000;
+}
+
+.presentation-view.menu-expanded .footer-container {
+  left: 360px;
+  width: calc(100% - 360px);
+  border-bottom-left-radius: 16px;
+  border-bottom-right-radius: 16px;
+}
+
+/* Main canvas positioning */
+.main-container {
+  position: relative;
+  transition:
+    transform 0.3s ease,
+    margin-left 0.3s ease,
+    box-shadow 0.3s ease,
+    border-radius 0.3s ease;
+  margin-left: 0;
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - 56px);
+  /* Account for header height only */
+  overflow: hidden;
+}
+
+/* When side menu is expanded, adjust the main container */
+.presentation-view.menu-expanded .main-container {
+  margin-left: 100px;
+  /* border-radius: 16px;
+    box-shadow: -12px 6px 24px rgba(0, 0, 0, 0.08), 0 2px 8px rgba(0, 0, 0, 0.04); */
+}
+
+/* Push main content when side panel is visible - using transform instead of padding/width changes */
+body.has-side-panel-open .main-container {
+  transform: translateX(200px);
+  /* Increased from 187.5px to push canvas over more */
+}
+
+/* When both side menu and panel are open - reduce size and center properly */
+body.has-side-panel-open .presentation-view.menu-expanded .main-container {
+  transform: translateX(220px);
+  /* Increased from 187.5px to 220px to push canvas over more when both menus are open */
+  transform-origin: center;
+  scale: 0.85;
+  /* Reduce size to fit better when both panels are open */
+}

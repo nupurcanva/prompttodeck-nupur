@@ -1,0 +1,20 @@
+/* Side Navigation Styles */
+.side-nav-container {
+  display: flex;
+  height: 100%;
+}
+
+/* Side Panel Container - matches Figma (72px dock + 360px panel = 432px) */
+.side-panel-container {
+  width: 360px;
+  height: 100%;
+  position: fixed;
+  top: 56px;
+  left: 72px;
+  bottom: 0;
+  background-color: #ffffff;
+  border-right: 1px solid #e0e0e0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  overflow-y: auto;
+  z-index: 9;
+}

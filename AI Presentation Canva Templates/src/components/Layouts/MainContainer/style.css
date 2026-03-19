@@ -1,0 +1,66 @@
+.main-container {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  overflow: hidden;
+  position: relative;
+}
+
+.main-content-row {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.main-container.from-chatgpt .canvas-view-container {
+  flex: 1;
+  min-height: 0;
+}
+
+.canvas-waiting-empty {
+  width: 100%;
+  height: 100%;
+  background: transparent;
+}
+
+.canvas-slide-page {
+  animation: canvas-slide-fade-in 1s ease-out;
+}
+
+@keyframes canvas-slide-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.chatgpt-preview-at-bottom {
+  flex-shrink: 0;
+  width: 100%;
+  height: 120px;
+  background-color: #f0f0f0;
+  border-top: 1px solid var(--border-color, #e5e7eb);
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+}
+
+.canvas-view-container {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 0;
+  width: 100%;
+}
+
+.preview-container {
+  position: relative;
+  z-index: 5;
+  flex-shrink: 0;
+  bottom: -30px;
+}

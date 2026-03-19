@@ -1,0 +1,107 @@
+@font-face {
+  font-family: "Canva Sans Regular";
+  src: url("/fonts/CanvaSans-Regular.otf");
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Canva Sans Medium";
+  src: url("/fonts/CanvaSans-Medium.otf");
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Canva Sans Bold";
+  src: url("/fonts/CanvaSans-Bold.otf");
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Canva Sans Display Regular";
+  src: url("/fonts/CanvaSansDisplay-Regular.otf");
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Canva Sans Display Medium";
+  src: url("/fonts/CanvaSansDisplay-Medium.otf");
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Canva Sans Display Bold";
+  src: url("/fonts/CanvaSansDisplay-Bold.otf");
+  font-display: swap;
+}
+
+.canva-sans-regular {
+  font-family:
+    "Canva Sans Regular",
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    Roboto,
+    "Helvetica Neue",
+    Arial,
+    sans-serif;
+}
+
+.canva-sans-medium {
+  font-family:
+    "Canva Sans Medium",
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    Roboto,
+    "Helvetica Neue",
+    Arial,
+    sans-serif;
+}
+
+.canva-sans-bold {
+  font-family:
+    "Canva Sans Bold",
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    Roboto,
+    "Helvetica Neue",
+    Arial,
+    sans-serif;
+}
+
+.canva-sans-display-regular {
+  font-family:
+    "Canva Sans Display Regular",
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    Roboto,
+    "Helvetica Neue",
+    Arial,
+    sans-serif;
+}
+
+.canva-sans-display-medium {
+  font-family:
+    "Canva Sans Display Medium",
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    Roboto,
+    "Helvetica Neue",
+    Arial,
+    sans-serif;
+}
+
+.canva-sans-display-bold {
+  font-family:
+    "Canva Sans Display Bold",
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    Roboto,
+    "Helvetica Neue",
+    Arial,
+    sans-serif;
+}

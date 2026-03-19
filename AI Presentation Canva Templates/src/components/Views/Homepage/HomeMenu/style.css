@@ -1,0 +1,442 @@
+/* Main menu container */
+.home-menu {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 100vh;
+  display: flex;
+  z-index: 210;
+  overflow: visible;
+  /* background-color: #F5EFFD; */
+  width: 80px;
+  transition: width 0.3s ease;
+}
+
+/* Expanded state */
+.home-menu.expanded {
+  width: 280px;
+}
+
+/* Global menu (always visible) */
+.menu-global {
+  position: relative;
+  width: 80px;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  z-index: 210;
+  transition: width 0.3s ease;
+  background: linear-gradient(to bottom, #ebe0fc 0%, #ddeaf9 100%);
+  border-right: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.home-menu.expanded .menu-global {
+  width: 80px;
+}
+
+/* Menu hamburger toggle */
+.menu-hamburger {
+  padding: 16px 0;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+
+.menu-toggle-btn {
+  background: none;
+  border: none;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+/* Close menu button styling */
+.close-menu-button {
+  position: absolute;
+  top: 12px;
+  left: 10px;
+  background: none;
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  border-radius: 4px;
+  padding: 6px 12px;
+  font-size: 13px;
+  color: #333;
+  cursor: pointer;
+  z-index: 220;
+  font-weight: 500;
+  background-color: white;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  transition: background-color 0.2s;
+  margin-top: 40px;
+  margin-left: 5px;
+}
+
+.close-menu-button:hover {
+  background-color: #f5f5f5;
+}
+
+.hamburger-icon {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.hamburger-icon span {
+  width: 100%;
+  height: 2px;
+  background-color: #333;
+  border-radius: 2px;
+  transition: all 0.3s ease;
+}
+
+.expanded .hamburger-icon span:nth-child(1) {
+  transform: translateY(6px) rotate(45deg);
+}
+
+.expanded .hamburger-icon span:nth-child(2) {
+  opacity: 0;
+}
+
+.expanded .hamburger-icon span:nth-child(3) {
+  transform: translateY(-6px) rotate(-45deg);
+}
+
+/* Top section including profile and menu items */
+.menu-top {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
+  flex-grow: 1;
+  padding: 0 0 20px 0;
+}
+
+/* Profile section */
+.profile-icon {
+  padding: 12px 0;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  margin-bottom: 12px;
+}
+
+.profile-circle {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background-color: #8b3dff;
+}
+
+/* Create button container */
+.menu-top .create-button-circular {
+  margin: 0 auto 16px;
+  display: flex;
+}
+
+/* Menu items container */
+.menu-items {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 0 5px;
+}
+
+/* Individual menu item */
+.menu-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 70px;
+  width: 70px;
+  border: none;
+  background: transparent;
+  border-radius: 8px;
+  cursor: pointer;
+  padding: 8px 4px;
+  transition: background-color 0.2s;
+  text-align: center;
+  gap: 4px;
+}
+
+.menu-item:hover .menu-icon {
+  background-color: rgba(0, 0, 0, 0.05);
+  border-radius: 8px;
+}
+
+.menu-item.active .menu-icon {
+  background-color: rgba(99, 102, 241, 0.1);
+  border-radius: 8px;
+}
+
+.menu-icon {
+  width: 40px;
+  height: 40px;
+  margin-bottom: 2px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: background-color 0.2s, border-radius 0.2s;
+  padding: 4px;
+}
+
+.menu-icon img {
+  width: 40px;
+  height: 40px;
+  opacity: 0.7;
+}
+
+.menu-icon svg {
+  width: 40px;
+  height: 40px;
+  opacity: 0.7;
+}
+
+.menu-item:hover .menu-icon img,
+.menu-item.active .menu-icon img,
+.menu-item:hover .menu-icon svg,
+.menu-item.active .menu-icon svg {
+  opacity: 1;
+}
+
+/* Menu item labels */
+.menu-item-label {
+  font-size: 11px;
+  font-weight: 500;
+  color: #666;
+  line-height: 1.2;
+  text-align: center;
+  margin-top: 2px;
+}
+
+.menu-item:hover .menu-item-label,
+.menu-item.active .menu-item-label {
+  color: #333;
+}
+
+/* Local expanded panel */
+.menu-local {
+  position: absolute;
+  left: 80px;
+  top: 0;
+  width: 280px;
+  height: 100vh;
+  background: linear-gradient(to bottom, #ebe0fc 0%, #ddeaf9 100%);
+  z-index: 99;
+  transform: translateX(-100%);
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.3s ease;
+  overflow-y: auto;
+
+  scrollbar-width: none;
+}
+
+.menu-local.visible {
+  transform: translateX(0);
+  opacity: 1;
+  visibility: visible;
+}
+
+.menu-local-content {
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+/* Canva logo header */
+.menu-local-header {
+  /* padding: 16px 20px; */
+  /* margin-bottom: 8px; */
+  padding-left: 20px;
+  margin-bottom: 10px;
+}
+
+.canva-logo {
+  font-size: 28px;
+  font-weight: 500;
+  color: #00c4cc;
+}
+
+.canva-text {
+  background: linear-gradient(45deg, #00c4cc, #7d2ae8);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  font-family: "Arial", sans-serif;
+  font-style: italic;
+}
+
+/* Create design button */
+.create-design-button {
+  color: white;
+  border: none;
+  font-size: 16px;
+  font-weight: 500;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  transition: background-color 0.2s;
+  padding-left: 20px;
+}
+
+/* Create button in main menu */
+.menu-create-button {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 60px;
+  width: 110px;
+  border: none;
+  background: #8b3dff;
+  border-radius: 12px;
+  cursor: pointer;
+  padding: 8px 4px;
+  transition: all 0.2s;
+  text-align: center;
+  gap: 4px;
+  margin: 8px 0;
+}
+
+.menu-create-button:hover {
+  background: #7d2ae8;
+  transform: translateY(-1px);
+}
+
+.menu-create-icon {
+  width: 24px;
+  height: 24px;
+  color: white;
+  font-size: 24px;
+  font-weight: bold;
+}
+
+.menu-create-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: white;
+  line-height: 1.2;
+}
+
+
+.plus-icon {
+  margin-right: 8px;
+  font-size: 18px;
+  font-weight: bold;
+}
+
+/* Menu sections */
+.menu-section {
+  margin-bottom: 16px;
+}
+
+.menu-section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 20px;
+  font-size: 16px;
+  font-weight: 500;
+  color: #333;
+  cursor: pointer;
+  position: relative;
+}
+
+.menu-section-header span {
+  font-weight: 600;
+  color: #2d3436;
+}
+
+.menu-section-header:hover {
+  background-color: rgba(0, 0, 0, 0.03);
+}
+
+.arrow-icon {
+  transition: transform 0.2s;
+  width: 16px;
+  height: 16px;
+  position: absolute;
+  right: 50px;
+}
+
+.arrow-icon.expanded {
+  transform: rotate(180deg);
+}
+
+.menu-section-items {
+  padding: 4px 0;
+}
+
+.menu-item-row {
+  display: flex;
+  align-items: center;
+  padding: 8px 16px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.menu-item-row:hover {
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+.menu-item-thumbnail {
+  width: 32px;
+  height: 32px;
+  background-color: rgba(57, 76, 96, 0.15);
+  border-radius: 8px;
+  margin-right: 12px;
+  flex-shrink: 0;
+}
+
+.menu-item-title {
+  font-size: 14px;
+  color: #333;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Body class for adjusting content layout when menu is expanded */
+body.menu-expanded .homepage-container,
+body.menu-expanded .canva-ai-container {
+  padding-left: 360px;
+  transition: padding-left 0.3s ease;
+}
+
+body.menu-expanded .homepage-content,
+body.menu-expanded .canva-ai-content {
+  margin-left: 15px;
+  border-radius: 16px;
+  box-shadow:
+    -12px 6px 24px rgba(0, 0, 0, 0.08),
+    0 2px 8px rgba(0, 0, 0, 0.04);
+  transform: none;
+  transition:
+    margin-left 0.3s ease,
+    border-radius 0.3s ease,
+    box-shadow 0.3s ease;
+  z-index: 1000000;
+}
+
+.menu-item-placeholder {
+  /* flex-grow: 1; */
+  max-width: 90%;
+}
+
+/* We can remove this old style if we want */
+.menu-item-placeholder-line {
+  display: none;
+}

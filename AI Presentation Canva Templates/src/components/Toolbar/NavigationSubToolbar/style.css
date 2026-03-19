@@ -1,0 +1,65 @@
+.navigation-sub-toolbar {
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1000;
+  margin-top: 16px;
+  pointer-events: auto;
+}
+
+.sub-toolbar-content {
+  background-color: white;
+  border-radius: 20px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 8px;
+  height: 42px;
+  box-sizing: border-box;
+}
+
+.sub-toolbar-button {
+  background: transparent;
+  border: none;
+  border-radius: 25px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  padding: 6px;
+  transition: background-color 0.2s ease;
+}
+
+.sub-toolbar-button:hover {
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+.sub-toolbar-button:active {
+  background-color: rgba(0, 0, 0, 0.1);
+  transform: scale(0.98);
+}
+
+.sub-toolbar-button img {
+  width: 24px;
+  height: 24px;
+  pointer-events: none;
+}
+
+.create-component-button {
+  /* Wider than other buttons but not oversized */
+  width: 168px;
+  height: 36px;
+  /* padding: 6px 12px; */
+  border-radius: 18px;
+}
+
+.create-component-button img {
+  width: 100%;
+  height: 24px;
+  object-fit: contain;
+  pointer-events: none;
+}

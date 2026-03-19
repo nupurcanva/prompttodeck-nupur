@@ -1,0 +1,122 @@
+.side-container {
+  padding-top: 8px;
+  width: 72px;
+  height: 100%;
+  background-color: #f0f1f5;
+  border-right: 1px solid #e0e0e0;
+  position: fixed;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  top: 56px;
+  /* Match header height exactly */
+  bottom: 0;
+  left: 0;
+  z-index: 10;
+  overflow-y: hidden;
+  font-family: var(--font-family-base);
+}
+
+.side-nav-button {
+  width: 100%;
+  height: 77px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 0;
+  cursor: pointer;
+  border: none;
+  background: transparent;
+  color: #333;
+  font-size: 11px;
+  transition: all 0.2s;
+  position: relative;
+}
+
+.side-nav-button:hover {
+  background-color: transparent;
+}
+
+.side-nav-button:hover .side-nav-icon {
+  background-color: #ffffff;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  transform: translateY(-2px);
+}
+
+.side-nav-button:hover .default-icon {
+  display: none;
+}
+
+.side-nav-button:hover .hover-icon {
+  display: block;
+}
+
+.side-nav-button:hover .side-nav-label {
+  font-weight: 600;
+}
+
+.side-nav-button.active {
+  background-color: transparent;
+}
+
+.side-nav-button.active .side-nav-icon {
+  background-color: #ffffff;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.side-nav-button.active .default-icon {
+  display: none;
+}
+
+.side-nav-button.active .hover-icon {
+  display: block;
+}
+
+.side-nav-button.active .side-nav-label {
+  font-weight: 600;
+}
+
+.side-nav-icon {
+  width: 32px;
+  height: 32px;
+  margin-bottom: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  border-radius: 8px;
+}
+
+.default-icon {
+  display: block;
+}
+
+.hover-icon {
+  display: none;
+  color: #0099cc;
+}
+
+.side-nav-label {
+  margin-top: 2px;
+  font-size: 11px;
+  font-weight: 500;
+  text-align: center;
+  max-width: 100%;
+  transition: color 0.2s;
+}
+
+/* Divider for sections */
+.side-nav-divider {
+  margin: 8px 16px;
+  height: 1px;
+  background-color: #e0e0e0;
+}
+
+/* Make Canva AI icon specifically smaller */
+:global([data-id="canva-ai"]) .side-nav-icon img {
+  width: 24px;
+  height: 24px;
+}

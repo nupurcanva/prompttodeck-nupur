@@ -1,0 +1,158 @@
+/* Shared scrollable container styles for all side nav panels */
+
+.scrollable-container {
+  position: relative;
+  overflow: hidden;
+}
+
+/* Right fade effect */
+.scrollable-container::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: 0;
+  height: 100%;
+  width: 40px;
+  background: linear-gradient(90deg, rgba(249, 249, 249, 0) 0%, rgba(249, 249, 249, 1) 100%);
+  pointer-events: none;
+  z-index: 5;
+}
+
+/* Left fade effect - initially hidden */
+.scrollable-container::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: 40px;
+  background: linear-gradient(90deg, rgba(249, 249, 249, 1) 0%, rgba(249, 249, 249, 0) 100%);
+  pointer-events: none;
+  z-index: 5;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+/* Show left fade when scrolled */
+.scrollable-container.scrolled-left::before {
+  opacity: 1;
+}
+
+.horizontal-scroll {
+  display: flex;
+  overflow-x: auto;
+  scroll-behavior: smooth;
+  padding-bottom: 8px;
+  /* Hide scrollbar */
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  position: relative;
+}
+
+.horizontal-scroll::-webkit-scrollbar {
+  display: none;
+}
+
+.horizontal-scroll .scroll-item {
+  margin-right: 8px;
+}
+
+.horizontal-scroll .scroll-item:last-child {
+  margin-right: 40px;
+  /* Space for the fade effect */
+}
+
+/* Custom scrollbar styling for vertical scrolling in lofi panels */
+/* Works well in both light and dark browser modes */
+
+/* Firefox scrollbar styling for lofi panels */
+.lofi-elements-panel,
+.lofi-design-panel,
+.lofi-apps-panel,
+.lofi-tools-panel,
+.lofi-brand-panel,
+.lofi-text-panel,
+.lofi-uploads-panel,
+.lofi-projects-panel,
+.lofi-apps-scrollable-content {
+  scrollbar-width: thin;
+  scrollbar-color: #d1d5db #f9fafb;
+}
+
+/* WebKit scrollbar styling (Chrome, Safari, Edge) for lofi panels */
+.lofi-elements-panel::-webkit-scrollbar,
+.lofi-design-panel::-webkit-scrollbar,
+.lofi-apps-panel::-webkit-scrollbar,
+.lofi-tools-panel::-webkit-scrollbar,
+.lofi-brand-panel::-webkit-scrollbar,
+.lofi-text-panel::-webkit-scrollbar,
+.lofi-uploads-panel::-webkit-scrollbar,
+.lofi-projects-panel::-webkit-scrollbar,
+.lofi-apps-scrollable-content::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.lofi-elements-panel::-webkit-scrollbar-track,
+.lofi-design-panel::-webkit-scrollbar-track,
+.lofi-apps-panel::-webkit-scrollbar-track,
+.lofi-tools-panel::-webkit-scrollbar-track,
+.lofi-brand-panel::-webkit-scrollbar-track,
+.lofi-text-panel::-webkit-scrollbar-track,
+.lofi-uploads-panel::-webkit-scrollbar-track,
+.lofi-projects-panel::-webkit-scrollbar-track,
+.lofi-apps-scrollable-content::-webkit-scrollbar-track {
+  background: #f9fafb;
+  border-radius: 4px;
+}
+
+.lofi-elements-panel::-webkit-scrollbar-thumb,
+.lofi-design-panel::-webkit-scrollbar-thumb,
+.lofi-apps-panel::-webkit-scrollbar-thumb,
+.lofi-tools-panel::-webkit-scrollbar-thumb,
+.lofi-brand-panel::-webkit-scrollbar-thumb,
+.lofi-text-panel::-webkit-scrollbar-thumb,
+.lofi-uploads-panel::-webkit-scrollbar-thumb,
+.lofi-projects-panel::-webkit-scrollbar-thumb,
+.lofi-apps-scrollable-content::-webkit-scrollbar-thumb {
+  background: #d1d5db;
+  border-radius: 4px;
+  border: 1px solid #f9fafb;
+}
+
+.lofi-elements-panel::-webkit-scrollbar-thumb:hover,
+.lofi-design-panel::-webkit-scrollbar-thumb:hover,
+.lofi-apps-panel::-webkit-scrollbar-thumb:hover,
+.lofi-tools-panel::-webkit-scrollbar-thumb:hover,
+.lofi-brand-panel::-webkit-scrollbar-thumb:hover,
+.lofi-text-panel::-webkit-scrollbar-thumb:hover,
+.lofi-uploads-panel::-webkit-scrollbar-thumb:hover,
+.lofi-projects-panel::-webkit-scrollbar-thumb:hover,
+.lofi-apps-scrollable-content::-webkit-scrollbar-thumb:hover {
+  background: #9ca3af;
+}
+
+.lofi-elements-panel::-webkit-scrollbar-thumb:active,
+.lofi-design-panel::-webkit-scrollbar-thumb:active,
+.lofi-apps-panel::-webkit-scrollbar-thumb:active,
+.lofi-tools-panel::-webkit-scrollbar-thumb:active,
+.lofi-brand-panel::-webkit-scrollbar-thumb:active,
+.lofi-text-panel::-webkit-scrollbar-thumb:active,
+.lofi-uploads-panel::-webkit-scrollbar-thumb:active,
+.lofi-projects-panel::-webkit-scrollbar-thumb:active,
+.lofi-apps-scrollable-content::-webkit-scrollbar-thumb:active {
+  background: #6b7280;
+}
+
+/* Corner styling when both scrollbars are present */
+.lofi-elements-panel::-webkit-scrollbar-corner,
+.lofi-design-panel::-webkit-scrollbar-corner,
+.lofi-apps-panel::-webkit-scrollbar-corner,
+.lofi-tools-panel::-webkit-scrollbar-corner,
+.lofi-brand-panel::-webkit-scrollbar-corner,
+.lofi-text-panel::-webkit-scrollbar-corner,
+.lofi-uploads-panel::-webkit-scrollbar-corner,
+.lofi-projects-panel::-webkit-scrollbar-corner,
+.lofi-apps-scrollable-content::-webkit-scrollbar-corner {
+  background: #f9fafb;
+}

@@ -1,0 +1,244 @@
+---
+description: Guide users through deploying static sites to Flying Fox hosting
+alwaysApply: false
+---
+
+# Deploying to Flying Fox
+
+When the user mentions **deploying**, **publishing**, or **hosting** their static site, guide them to use the **fox** CLI tool for Flying Fox hosting.
+
+## What is Fox?
+
+Fox (`@canva-ct/fox`) is a CLI tool for deploying static sites to Flying Fox hosting at `*.flyingfox.canva-experiments.com`. It provides both interactive and non-interactive deployment modes.
+
+## IMPORTANT: Cursor/Claude Code Usage
+
+**When deploying from Cursor, ALWAYS use non-interactive commands:**
+
+- ❌ NEVER run `npx fox` (interactive mode) - it won't work in Cursor
+- ✅ ALWAYS run `npx fox deploy --project-name <name>` with an explicit project name
+- ✅ ALWAYS use `npx fox auth --auto` (never `npx fox auth`) for authentication
+
+**You MUST ask the user for a project name if one isn't already configured.**
+
+### Required Workflow for Cursor
+
+1. Check auth: `npx fox info`
+2. If not authenticated: `npx fox auth --auto`
+3. Check project config: Look for `.fox/config.json` or run `npx fox info`
+4. If no project name: **ASK THE USER** (don't guess or make up a name)
+5. Build: `npm run build`
+6. Deploy: `npx fox deploy --project-name <user-provided-name>`
+
+## Deployment Workflow (For Cursor/Claude Code)
+
+When a user asks to deploy, follow this **exact workflow**:
+
+### Step 1: Check Authentication Status
+
+First, run `npx fox info` to check if the user is already authenticated:
+
+```bash
+npx fox info
+```
+
+### Step 2: Authenticate if Needed
+
+If the user is not logged in, use **automatic authentication** (required for Cursor):
+
+```bash
+npx fox auth --auto
+```
+
+This will:
+
+- Open their browser for OAuth authentication
+- Save the token to `~/.fox/config.json`
+- Exit automatically after authentication completes
+
+### Step 3: Determine Project Name
+
+Check if a project name is already configured:
+
+- Look for `.fox/config.json` in the project directory
+- Run `npx fox info` to see if a project is configured
+
+**If no project name exists:**
+
+- **STOP and ASK THE USER** what they want to name their project
+- Do NOT guess or make up a project name
+- Explain: "This will be deployed to https://[username]-[project-name].flyingfox.canva-experiments.com/"
+
+Example questions:
+
+- "What would you like to name this project for deployment?"
+- "What project name should I use? (It will be deployed to https://[username]-[project-name].flyingfox.canva-experiments.com/)"
+
+### Step 4: Build the Project
+
+Ensure the project is built before deploying:
+
+```bash
+npm run build
+```
+
+### Step 5: Deploy with Project Name
+
+**ALWAYS use the non-interactive deploy command:**
+
+```bash
+npx fox deploy --project-name <the-project-name>
+```
+
+**NEVER run just `npx fox` in Cursor - it will not work!**
+
+## Installation
+
+If fox is not installed, it will be automatically run via npx. For local installation:
+
+```bash
+npm install @canva-ct/fox --save-dev
+```
+
+## Available Commands
+
+### Non-Interactive Commands (Use These in Cursor)
+
+```bash
+npx fox deploy --project-name my-app        # Deploy with saved token (REQUIRED in Cursor)
+npx fox auth --auto                         # Automatic authentication (REQUIRED in Cursor)
+npx fox auth -a                             # Shorthand for --auto
+npx fox info                                # Show auth status and project info
+npx fox open                                # Open deployed site in browser
+npx fox logout                              # Clear saved credentials
+```
+
+### Interactive Mode (Terminal/Manual Use Only - NOT for Cursor)
+
+```bash
+npx fox                                     # Interactive UI (does NOT work in Cursor)
+npx fox auth                                # Interactive authentication (does NOT work in Cursor)
+```
+
+**Note:** Interactive commands (`npx fox` and `npx fox auth`) will not work when called from Cursor/Claude Code. Always use the non-interactive versions above.
+
+## Command Flags
+
+- `--project-name <name>` - Project name for deployment
+- `--token <token>` - Authentication token (skips browser login)
+- `--auto` / `-a` - Automatic authentication mode (no interactive UI)
+- `--help` - Show help message
+
+## Configuration Files
+
+- **Global auth**: `~/.fox/config.json` (stores authentication token)
+- **Project config**: `./.fox/config.json` (stores last deployed project per directory)
+
+## Deployment URL Pattern
+
+Sites are deployed to:
+
+```
+https://[username]-[project-name].flyingfox.canva-experiments.com/
+```
+
+## When to Suggest Fox
+
+Suggest using fox when the user:
+
+- Asks about deploying their app/site
+- Mentions Flying Fox hosting
+- Wants to publish their static files
+- Needs to update an existing deployment
+- Is working with `dist/` or `build/` folders
+- Mentions drag-and-drop deployment (fox is faster!)
+
+## Tips for Cursor/Claude Code
+
+1. **Authentication**: Always use `npx fox auth --auto` (never `npx fox auth`)
+2. **Project name required**: Always provide `--project-name` when deploying
+3. **Ask when needed**: If no project is configured, ask the user for a name before deploying
+4. **Subsequent deployments**: Run `npx fox deploy --project-name <name>` - it remembers your token
+5. **Quick access**: After deploying, use `npx fox open` to view the site
+
+## Example Complete Workflow (For Cursor)
+
+```bash
+# 1. Check auth status
+npx fox info
+
+# 2. If not logged in, authenticate (non-interactive)
+npx fox auth --auto
+
+# 3. Check if project is configured
+npx fox info
+
+# 4. If no project name, ASK THE USER for one (don't guess!)
+# Then proceed with the name they provide
+
+# 5. Build the project
+npm run build
+
+# 6. Deploy with explicit project name (REQUIRED)
+npx fox deploy --project-name my-awesome-app
+
+# 7. Open deployed site
+npx fox open
+```
+
+## Common Issues & Solutions
+
+- **"No dist or build folder found"**: Make sure you've built your project first with `npm run build`
+- **Authentication expired**: Run `npx fox auth --auto` to re-authenticate (never `npx fox auth`)
+- **Wrong project name**: Check `./.fox/config.json` or run `npx fox info`
+- **Token issues**: Run `npx fox logout` then `npx fox auth --auto` to get a fresh token
+- **Command hangs/doesn't respond**: You probably ran `npx fox` or `npx fox auth` instead of the non-interactive versions. These don't work in Cursor!
+- **No project configured**: Don't guess - ask the user what name they want for their project
+
+## For This Project (AI Comments Template)
+
+When deploying this AI Comments Template from Cursor:
+
+```bash
+# 1. Check authentication
+npx fox info
+
+# 2. Authenticate if needed (non-interactive only)
+npx fox auth --auto
+
+# 3. Check if project is configured
+npx fox info
+
+# 4. If no project name is configured:
+#    - ASK THE USER: "What would you like to name this project?"
+#    - Suggest: "ai-comments-template" (but let user decide)
+#    - Explain the URL will be: https://[username]-[project-name].flyingfox.canva-experiments.com/
+
+# 5. Build the frontend
+npm run build
+
+# 6. Deploy with explicit project name (REQUIRED - never just 'npx fox')
+npx fox deploy --project-name ai-comments-template
+```
+
+The deployed URL will be:
+
+```
+https://[username]-ai-comments-template.flyingfox.canva-experiments.com/
+```
+
+## Quick Reference (For Cursor)
+
+| Task               | Command                                    | Notes                                         |
+| ------------------ | ------------------------------------------ | --------------------------------------------- |
+| Check if logged in | `npx fox info`                             | Always run first                              |
+| Login/authenticate | `npx fox auth --auto` or `npx fox auth -a` | REQUIRED in Cursor                            |
+| Deploy             | `npx fox deploy --project-name my-app`     | REQUIRED in Cursor (never just `npx fox`)     |
+| Open deployed site | `npx fox open`                             | Opens browser                                 |
+| Logout             | `npx fox logout`                           | Clears token                                  |
+| Get help           | `npx fox --help`                           | Show all commands                             |
+
+**Commands that DON'T work in Cursor:**
+
+- `npx fox` (interactive mode)
+- `npx fox auth` (interactive authentication)

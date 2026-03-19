@@ -1,0 +1,133 @@
+.chatgpt-preview-panel {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  background: transparent;
+  height: 100%;
+  min-height: 96px;
+  overflow: hidden;
+}
+
+.chatgpt-preview-area {
+  position: relative;
+  flex-shrink: 0;
+  width: 160px;
+  height: 90px;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #ffffff;
+}
+
+.chatgpt-preview-gradient-bg {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background: linear-gradient(
+    135deg,
+    rgba(139, 61, 255, 0.25) 0%,
+    rgba(139, 61, 255, 0.12) 40%,
+    rgba(139, 61, 255, 0.06) 70%,
+    rgba(255, 255, 255, 0.95) 100%
+  );
+  background-size: 200% 200%;
+  animation: chatgpt-preview-gradient-shift 4s ease-in-out infinite;
+  transition: opacity 0.5s ease-out;
+}
+
+.chatgpt-preview-gradient-bg.faded {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.chatgpt-preview-bg {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+}
+
+.chatgpt-preview-bg-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: blur(8px);
+  transition: filter 0.5s ease-out;
+}
+
+.chatgpt-preview-bg-img.unblurred {
+  filter: blur(0);
+}
+
+@keyframes chatgpt-preview-gradient-shift {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+
+.chatgpt-preview-content {
+  position: relative;
+  z-index: 2;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.chatgpt-preview-text {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 400;
+  color: #6b7280;
+  text-align: center;
+}
+
+.chatgpt-preview-slides-row {
+  display: flex;
+  flex: 1;
+  gap: 8px;
+  overflow-x: auto;
+  padding: 4px 0;
+  min-width: 0;
+  -webkit-overflow-scrolling: touch;
+}
+
+.chatgpt-preview-slides-row::-webkit-scrollbar {
+  height: 6px;
+}
+
+.chatgpt-preview-slides-row::-webkit-scrollbar-thumb {
+  background: rgba(13, 13, 13, 0.2);
+  border-radius: 3px;
+}
+
+.chatgpt-preview-slide-thumb {
+  flex-shrink: 0;
+  width: 120px;
+  min-width: 120px;
+  height: 68px;
+  border-radius: 8px;
+  overflow: hidden;
+  background: transparent;
+}
+
+.chatgpt-preview-slide-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.chatgpt-preview-slide-gradient {
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    135deg,
+    rgba(139, 61, 255, 0.25) 0%,
+    rgba(139, 61, 255, 0.15) 40%,
+    rgba(139, 61, 255, 0.08) 70%,
+    rgba(255, 255, 255, 0.9) 100%
+  );
+  background-size: 200% 200%;
+  animation: chatgpt-preview-gradient-shift 4s ease-in-out infinite;
+}

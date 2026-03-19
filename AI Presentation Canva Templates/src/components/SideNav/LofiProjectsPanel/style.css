@@ -1,0 +1,277 @@
+/* Import the shared scrollable container styles */
+@import url("../shared/scrollable.css");
+
+.lofi-projects-panel {
+  /* width: 320px; */
+  height: 100%;
+  /* background-color: #f9f9f9; */
+  overflow-y: auto;
+  padding: 0;
+  /* Remove padding from the main container */
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Sticky Header Styles */
+.lofi-projects-sticky-header {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  /* background-color: #f9f9f9; */
+  padding: 16px 16px 0 16px;
+  border-bottom: 1px solid #eeeeee;
+}
+
+/* Scrollable Content Styles */
+.lofi-projects-scrollable-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0 16px 16px 16px;
+  padding-bottom: 100px;
+}
+
+/* Search Bar Styles */
+.lofi-projects-search-container {
+  margin-bottom: 16px;
+}
+
+.lofi-projects-search-bar {
+  display: flex;
+  align-items: center;
+  background-color: #f0f0f0;
+  border-radius: 4px;
+  padding: 8px 12px;
+}
+
+.lofi-projects-search-icon {
+  color: #666;
+  margin-right: 8px;
+}
+
+.lofi-projects-search-bar input {
+  border: none;
+  background: transparent;
+  width: 100%;
+  outline: none;
+  font-size: 14px;
+}
+
+/* Dropdown Styles */
+.lofi-projects-dropdown {
+  margin-bottom: 16px;
+}
+
+.lofi-projects-dropdown-btn {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  background-color: #f0f0f0;
+  border: none;
+  border-radius: 4px;
+  padding: 8px 12px;
+  font-size: 14px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.lofi-projects-dropdown-btn svg {
+  color: #666;
+}
+
+/* Navigation Styles */
+.lofi-projects-nav {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  /* margin-bottom: 20px; */
+  position: relative;
+  padding-bottom: 12px;
+}
+
+.lofi-projects-nav-item {
+  flex: 1;
+  height: 8px;
+  background: none;
+  border: none;
+  padding: 12px 12px;
+  position: relative;
+  cursor: pointer;
+  padding-bottom: 30px;
+}
+
+.lofi-projects-nav-item.active::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background-color: #8b3dff;
+}
+
+.lofi-projects-nav-indicator {
+  height: 8px;
+  background-color: #e0e0e0;
+  border-radius: 4px;
+}
+
+.lofi-projects-nav-item.active .lofi-projects-nav-indicator {
+  background-color: #8b3dff;
+}
+
+.lofi-projects-nav-next {
+  background: none;
+  border: none;
+  color: #666;
+  padding: 0;
+  margin-left: 8px;
+  cursor: pointer;
+}
+
+/* Section Styles */
+.lofi-projects-section {
+  margin-bottom: 24px;
+}
+
+.lofi-projects-section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.lofi-projects-section-header h3 {
+  font-size: 16px;
+  font-weight: 600;
+  color: #333;
+  margin: 0;
+}
+
+.lofi-projects-see-all {
+  font-size: 14px;
+  color: #666;
+  text-decoration: none;
+}
+
+/* Designs Grid Styles */
+.lofi-projects-designs-grid {
+  /* Remove this style */
+}
+
+.lofi-projects-design-item {
+  border-radius: 8px;
+  overflow: hidden;
+  /* background-color: #f0f0f0; */
+}
+
+.lofi-projects-design-preview {
+  padding-top: 65%;
+  background-color: #f1f3f5;
+  position: relative;
+  border-radius: 8px;
+}
+
+.lofi-projects-design-info {
+  padding: 8px;
+}
+
+.lofi-projects-design-info h4 {
+  font-size: 14px;
+  font-weight: 500;
+  margin: 0 0 4px 0;
+  color: #333;
+}
+
+.lofi-projects-design-info p {
+  font-size: 12px;
+  color: #666;
+  margin: 0;
+}
+
+/* Folders List Styles */
+.lofi-projects-folders-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.lofi-projects-folder-item {
+  display: flex;
+  align-items: center;
+  padding: 8px 8px 8px 0px;
+  border-radius: 4px;
+  /* background-color: #f0f0f0; */
+}
+
+.lofi-projects-folder-icon {
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  width: 80px;
+  height: 40px;
+  /* margin-right: 12px; */
+  color: #666;
+}
+
+.lofi-projects-folder-info h4 {
+  font-size: 14px;
+  font-weight: 500;
+  margin: 0 0 4px 0;
+  color: #333;
+}
+
+.lofi-projects-folder-info p {
+  font-size: 12px;
+  color: #666;
+  margin: 0;
+  display: flex;
+}
+
+/* Images Grid Styles */
+.lofi-projects-images-grid {
+  /* Remove this style */
+}
+
+.lofi-projects-image-item {
+  background-color: #f0f0f0;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.lofi-projects-image-item.large {
+  grid-column: span 2;
+  grid-row: span 2;
+}
+
+.lofi-projects-image-preview {
+  padding-top: 100%;
+  position: relative;
+}
+
+.lofi-projects-image-item.large .lofi-projects-image-preview {
+  padding-top: 75%;
+}
+
+.lofi-projects-dropdown img {
+  width: 100%;
+}
+
+/* Update design and image grid items for horizontal scroll */
+.horizontal-scroll .lofi-projects-design-item {
+  flex: 0 0 calc(50% - 4px);
+}
+
+.horizontal-scroll .lofi-projects-image-item {
+  flex: 0 0 calc(33.333% - 6px);
+}
+
+.horizontal-scroll .lofi-projects-image-item.large {
+  flex: 0 0 calc(66.666% - 4px);
+}
+
+.lofi-projects-dropdown svg {
+  width: 100%;
+  height: 100%;
+}

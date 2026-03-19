@@ -1,0 +1,149 @@
+.header-nav-right {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  height: 100%;
+  gap: 20px;
+}
+
+.header-nav-container-right {
+  display: flex;
+  height: 100%;
+  align-items: center;
+  margin-left: auto;
+}
+
+.share-nav-item {
+  background-color: #f0f0f0;
+  border-radius: 5px;
+  padding: 5px 5px;
+  width: 120px;
+  color: #333;
+  justify-content: center;
+  align-items: center;
+  display: flex;
+  flex-wrap: nowrap;
+  transition: all 0.2s ease-in-out;
+}
+
+.present-nav-item {
+  border-radius: 5px;
+  padding: 5px 5px;
+  width: 120px;
+  color: #333;
+  justify-content: center;
+  align-items: center;
+  display: flex;
+  flex-wrap: nowrap;
+  border: 1px solid rgba(0, 0, 0, 0.2);
+}
+
+.border-nav-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  height: 36px;
+  padding: 0 12px;
+  border: 1px solid rgba(0, 0, 0, 0.2);
+  border-radius: 4px;
+  color: #333;
+}
+
+.people-add-nav-item {
+  border-radius: 50%;
+  padding: 10px;
+  color: rgb(255, 255, 255);
+  justify-content: center;
+  align-items: center;
+  display: flex;
+  flex-wrap: nowrap;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  margin-left: -20px;
+}
+
+.people-nav-item {
+  border-radius: 50%;
+  color: rgb(255, 255, 255);
+  justify-content: center;
+  align-items: center;
+  display: flex;
+  flex-wrap: nowrap;
+  margin-left: -40px;
+}
+
+.people-nav-item img {
+  width: 25px;
+  height: 25px;
+}
+
+.collaboration-div {
+  display: flex;
+  align-items: center;
+  margin-right: 8px;
+}
+
+.collaboration-div-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.circular-nav-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: rgba(0, 0, 0, 0.1);
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+}
+
+.white-nav-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 36px;
+  padding: 0 16px;
+  background-color: #f0f0f0;
+  border-radius: 4px;
+  color: #333;
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.share-nav-item span {
+  font-weight: 600;
+}
+
+.present-nav-item span {
+  font-weight: 500;
+}
+
+.header-share-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+}
+
+.header-share-button img {
+  width: 96px;
+  height: 40px;
+  filter: invert(0);
+}
+
+.header-website-publish-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+}
+
+.header-print-with-canva-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+}

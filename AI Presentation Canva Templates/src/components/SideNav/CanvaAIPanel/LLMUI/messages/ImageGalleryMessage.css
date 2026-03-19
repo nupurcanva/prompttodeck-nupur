@@ -1,0 +1,292 @@
+.image-carousel-container {
+  margin: 12px 0;
+  width: 100%;
+  display: block; /* Override any parent flex settings */
+}
+
+.image-carousel {
+  display: flex !important; /* Force horizontal layout */
+  flex-direction: row !important; /* Ensure horizontal direction */
+  gap: 8px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 8px 0;
+  width: 100%;
+  max-width: 100%;
+}
+
+.image-carousel::-webkit-scrollbar {
+  height: 6px;
+}
+
+.image-carousel::-webkit-scrollbar-track {
+  background: #f7fafc;
+  border-radius: 3px;
+}
+
+.image-carousel::-webkit-scrollbar-thumb {
+  background: #cbd5e0;
+  border-radius: 3px;
+}
+
+.image-carousel::-webkit-scrollbar-thumb:hover {
+  background: #a0aec0;
+}
+
+.image-item {
+  flex: 0 0 auto;
+  width: 120px;
+  height: 120px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border-radius: 8px;
+  border: 2px solid #e2e8f0;
+  /* Add border to make items visible */
+  background-color: #f8f9fa;
+  /* Add background */
+}
+
+.image-item:hover:not(.locked) {
+  background-color: #f8f9fa;
+  border-color: #e2e8f0;
+}
+
+.image-item.selected {
+  border-color: #8b3dff;
+  background-color: #f3f0ff;
+}
+
+.image-item.locked {
+  cursor: not-allowed;
+  opacity: 0.8;
+}
+
+.image-wrapper {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  border-radius: 6px;
+  overflow: hidden;
+  margin-bottom: 8px;
+}
+
+.carousel-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 6px;
+  transition: transform 0.2s ease;
+}
+
+.image-item:hover:not(.locked) .carousel-image {
+  transform: scale(1.05);
+}
+
+.selection-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-end;
+  padding: 8px;
+  border-radius: 6px;
+}
+
+.checkmark {
+  color: white;
+  font-size: 16px;
+  font-weight: bold;
+}
+
+.image-description {
+  font-size: 11px;
+  color: #4a5568;
+  line-height: 1.3;
+  margin: 0;
+  text-align: center;
+  word-wrap: break-word;
+  hyphens: auto;
+}
+
+.image-item.selected .image-description {
+  color: #8b3dff;
+  font-weight: 500;
+}
+
+.lock-indicator {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 12px;
+  padding: 8px 12px;
+  background-color: #f0f9ff;
+  border: 1px solid #bae6fd;
+  border-radius: 6px;
+  color: #0369a1;
+}
+
+.lock-text {
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.lock-icon {
+  font-size: 14px;
+}
+
+.image-carousel-container.locked .image-carousel {
+  position: relative;
+  /* Keep pointer events for scrolling but prevent clicks on items */
+}
+
+/* Remove the overlay that was blocking everything */
+
+.image-carousel-container.locked .image-item {
+  pointer-events: none;
+  /* Prevent clicks on individual items when locked */
+  cursor: not-allowed;
+}
+
+.image-carousel-container.locked .image-item:not(.selected) {
+  opacity: 0.3;
+  filter: grayscale(0.5);
+}
+
+.image-carousel-container.locked .image-item.selected {
+  opacity: 1;
+  filter: none;
+  border-color: #8b3dff;
+  box-shadow: 0 0 0 2px rgba(139, 61, 255, 0.2);
+  cursor: not-allowed;
+}
+
+/* Revert button styles - matching the suggestion buttons */
+.image-carousel-actions {
+  display: flex;
+  justify-content: flex-start;
+  margin-top: 12px;
+  padding-top: 8px;
+}
+
+.revert-btn {
+  background-color: white;
+  color: #1c1e21;
+  border: 1px solid #e1e5e9;
+  padding: 6px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  transition:
+    background-color 0.2s,
+    border-color 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.revert-btn:hover {
+  background-color: #f8f9fa;
+  border-color: #d0d7de;
+}
+
+.revert-btn:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(139, 61, 255, 0.2);
+}
+
+@keyframes skeleton-loading {
+  0% {
+    background-position: 200% 0;
+  }
+
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+/* Scroll navigation buttons */
+.scroll-button {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid #e2e8f0;
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 14px;
+  color: #4a5568;
+  transition: all 0.2s ease;
+  z-index: 2;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.scroll-button:hover {
+  background: white;
+  border-color: #cbd5e0;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.scroll-button.left {
+  left: 8px;
+}
+
+.scroll-button.right {
+  right: 8px;
+}
+
+.scroll-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.scroll-button:disabled:hover {
+  background: rgba(255, 255, 255, 0.9);
+  border-color: #e2e8f0;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Colorful Shimmer Animation - From original design */
+@keyframes subtleShimmer {
+  0% {
+    background-position: 0% 50%;
+    opacity: 0.8;
+  }
+  50% {
+    background-position: 100% 50%;
+    opacity: 1;
+  }
+  100% {
+    background-position: 0% 50%;
+    opacity: 0.8;
+  }
+}
+
+/* Image Loading Animation with Colorful Shimmer Effect */
+.image-loading-placeholder {
+  position: relative;
+  background: linear-gradient(135deg, #f3ebff, #e6f9f6, #f9ebff, #e6f5ff);
+  background-size: 400% 400%;
+  border-radius: 6px;
+  overflow: hidden;
+  animation: subtleShimmer 3s ease-in-out infinite;
+  opacity: 0.9;
+  width: 100%;
+  height: 100%;
+}
+
+/* Fade-out state for loading placeholders */
+.image-loading-placeholder.fade-out {
+  opacity: 0;
+  transition: opacity 0.5s ease-out;
+}

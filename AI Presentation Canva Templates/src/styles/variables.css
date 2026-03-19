@@ -1,0 +1,57 @@
+/* 
+ * variables.css
+ * Contains all CSS variables and custom properties for the application
+ */
+
+:root {
+  /* Colors */
+  --orange-box: #ff4d00;
+  --blue-box: #992bff;
+  --white: #ffffff;
+  --box-shadow: rgba(0, 0, 0, 0.2);
+  --toolbar-bg: #ffffff;
+  --toolbar-border: rgba(0, 0, 0, 0.1);
+  --toolbar-btn-hover: rgba(0, 0, 0, 0.05);
+  --toolbar-icon: #424242;
+  --primary-text: rgb(13, 18, 22);
+  --purple: #8b3dff;
+  --hover-select: #8b3dff;
+
+  /* UI Element Sizes */
+  --toolbar-height: 32px;
+  --toolbar-icon-size: 24px;
+  --toolbar-padding: 8px;
+  --border-radius-sm: 4px;
+  --border-radius-md: 8px;
+  --border-radius-lg: 12px;
+
+  /* Font Sizes */
+  --font-size-sm: 12px;
+  --font-size-base: 14px;
+  --font-size-lg: 16px;
+
+  /* Spacing */
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 16px;
+  --spacing-lg: 24px;
+  --spacing-xl: 32px;
+
+  /* Z-index layers */
+  --z-background: -1;
+  --z-canvas: 1;
+  --z-selection: 2;
+  --z-toolbar: 100;
+  --z-dropdown: 1000;
+  --z-modal: 1100;
+
+  /* Transitions */
+  --transition-fast: 0.1s;
+  --transition-normal: 0.2s;
+  --transition-slow: 0.3s;
+
+  /* Font Families */
+  --font-family-base:
+    "Canva Sans", "Noto Sans Variable", "Noto Sans", -apple-system, "system-ui", "Segoe UI",
+    Helvetica, Arial, sans-serif;
+}

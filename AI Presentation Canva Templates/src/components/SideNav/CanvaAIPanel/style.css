@@ -1,0 +1,158 @@
+.canva-ai-panel {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+  background-color: #ffffff;
+  position: relative;
+  font-family:
+    "Canva Sans",
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    Roboto,
+    sans-serif;
+}
+
+.canva-ai-scrollable {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.canva-ai-icon {
+  color: #7c3aed;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  padding: 4px;
+  transition: background-color 0.2s ease;
+}
+
+.canva-ai-icon:hover {
+  background-color: rgba(124, 58, 237, 0.1);
+}
+
+.canva-ai-title h2 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 400;
+  color: rgba(14, 19, 24, 1);
+}
+
+.canva-ai-chat {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  /* background-color: #f8f9fa; */
+}
+
+.chat-messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px 20px 80px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  align-items: stretch;
+}
+
+.canva-ai-input {
+  padding: 15px;
+  background-color: transparent;
+  flex-shrink: 0;
+}
+
+.canva-ai-input-sticky {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 10;
+  padding: 15px;
+  background-color: #ffffff;
+}
+
+/* Scrollbar styling for chat messages */
+.chat-messages::-webkit-scrollbar {
+  width: 6px;
+}
+
+.chat-messages::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.chat-messages::-webkit-scrollbar-thumb {
+  background: #e0e0e0;
+  border-radius: 3px;
+}
+
+.chat-messages::-webkit-scrollbar-thumb:hover {
+  background: #ccc;
+}
+
+/* Override any existing message styles to fit better in the panel */
+.chat-messages .message {
+  max-width: 100%;
+  margin-bottom: 12px;
+}
+
+/* Force assistant messages to align left */
+.canva-ai-panel .chat-messages > div {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  width: auto;
+  /* width: 100%; */
+}
+
+/* Ensure assistant message containers are left-aligned */
+.canva-ai-panel .chat-messages > div[class*="justify-start"],
+.canva-ai-panel .chat-messages > div:has(.bg-gray-100) {
+  align-self: flex-start;
+  justify-content: flex-start;
+}
+
+/* User messages stay right-aligned */
+.canva-ai-panel .chat-messages > div[class*="justify-end"] {
+  align-self: flex-end;
+  justify-content: flex-end;
+}
+
+/* Style adjustments for the Wonderbox in the panel */
+.canva-ai-input .wonderbox {
+  width: 100%;
+}
+
+/* Enable text selection for message content */
+.canva-ai-panel .chat-messages {
+  -webkit-user-select: text;
+  -moz-user-select: text;
+  -ms-user-select: text;
+  user-select: text;
+}
+
+/* Ensure message text is selectable */
+.canva-ai-panel .chat-messages .text-sm,
+.canva-ai-panel .chat-messages div[class*="text-sm"],
+.canva-ai-panel .chat-messages p,
+.canva-ai-panel .chat-messages span {
+  -webkit-user-select: text;
+  -moz-user-select: text;
+  -ms-user-select: text;
+  user-select: text;
+}
+
+/* Keep interactive elements non-selectable */
+.canva-ai-panel .chat-messages button,
+.canva-ai-panel .chat-messages .image-gallery-item {
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}

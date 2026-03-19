@@ -1,0 +1,947 @@
+/* Lo-fi Elements Panel Styles */
+@import url("../shared/scrollable.css");
+
+/* Lo-fi Elements Panel Styles */
+.lofi-elements-panel {
+  height: 100%;
+  width: 100%;
+  overflow-y: auto;
+  position: relative;
+  padding-bottom: 100px;
+}
+
+/* Sticky header section */
+.lofi-elements-sticky-header {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background-color: #ffffff;
+  /* padding-bottom: 16px; */
+  /* border-bottom: 1px solid rgba(0, 0, 0, 0.06); */
+}
+
+/* Search Bar - remove sticky positioning since parent container is now sticky */
+.lofi-elements-panel .lofi-search-container {
+  padding: 16px 16px 0 16px;
+
+  margin-bottom: 0px;
+}
+
+.lofi-generate-images-button-container {
+  padding: 0 16px;
+}
+
+.lofi-search-bar {
+  display: flex;
+  align-items: center;
+  background-color: #f5f5f5;
+  border: 1px solid #e0e0e0;
+  border-radius: 4px;
+  padding: 8px 12px;
+  width: 100%;
+}
+
+.lofi-search-icon {
+  margin-right: 8px;
+  display: flex;
+  align-items: center;
+}
+
+.lofi-search-bar input {
+  flex: 1;
+  border: none;
+  background: transparent;
+  outline: none;
+  font-size: 14px;
+  color: #333;
+}
+
+/* Horizontal cards container */
+.lofi-elements-sticky-header .scrollable-container {
+  padding: 0 16px;
+  margin-bottom: 8px;
+}
+
+.lofi-elements-sticky-header .horizontal-scroll {
+  padding-right: 40px;
+  padding: 10px 16px;
+}
+
+/* Scrollable content below sticky header */
+.lofi-elements-scrollable-content {
+  padding-top: 8px;
+  padding: 8px 16px 16px 16px;
+}
+
+/* Cards Scroll */
+.lofi-cards-scroll-container {
+  margin: 16px 0;
+  /* padding-left: 16px; */
+  position: relative;
+}
+
+.lofi-cards-scroll {
+  display: flex;
+  overflow-x: auto;
+  scrollbar-width: none;
+  padding-bottom: 8px;
+  padding-right: 40px;
+}
+
+.lofi-cards-scroll::-webkit-scrollbar {
+  display: none;
+}
+
+.lofi-card-item {
+  height: 40px;
+  min-width: 100px;
+  background-color: #f2f2f200;
+  border: 1.3px solid #D6C2FF;
+  border-radius: 20px;
+  flex-shrink: 0;
+}
+
+/* Section Styles */
+.lofi-section-container {
+  margin-bottom: 24px;
+  padding: 0 16px;
+  position: relative;
+}
+
+.lofi-section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.lofi-section-header h3 {
+  font-size: 18px;
+  font-weight: 700;
+  color: #222;
+  margin: 0;
+}
+
+.lofi-see-all-button {
+  font-size: 12px;
+  color: #666;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+}
+
+.lofi-see-all-button:hover {
+  color: #333;
+  text-decoration: underline;
+}
+
+.lofi-see-all-link {
+  font-size: 14px;
+  color: #666;
+  text-decoration: none;
+  font-weight: normal;
+}
+
+.lofi-see-all-link:hover {
+  text-decoration: underline;
+}
+
+/* Grid Items */
+.lofi-items-grid {
+  display: grid;
+  gap: 8px;
+}
+
+.lofi-grid-item {
+  aspect-ratio: 1 / 1;
+  background-color: #f2f2f2;
+  border-radius: 4px;
+}
+
+/* Next Button */
+.lofi-next-button {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  background-color: #ffffff;
+  border-radius: 50%;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+  cursor: pointer;
+  z-index: 2;
+}
+
+.lofi-next-button svg {
+  width: 16px;
+  height: 16px;
+}
+
+/* Shapes Section */
+.lofi-shapes-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding-right: 40px;
+}
+
+.lofi-shape-item {
+  width: 40px;
+  height: 40px;
+  background-color: #f0f0f0;
+  transition:
+    transform 0.2s ease,
+    background-color 0.2s ease;
+  cursor: pointer;
+  flex-shrink: 0;
+  margin-right: 12px;
+}
+
+.lofi-shape-item:hover {
+  transform: scale(1.05);
+  background-color: #e0e0e0;
+}
+
+.lofi-shape-item.square {
+  border-radius: 4px;
+}
+
+.lofi-shape-item.circle {
+  border-radius: 50%;
+}
+
+.lofi-shape-item.line {
+  height: 2px;
+  margin-top: 20px;
+  background-color: #ccc;
+  width: 80px;
+}
+
+.lofi-shape-item.triangle {
+  clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
+}
+
+.lofi-shape-item.diamond {
+  clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%);
+}
+
+.lofi-shape-item.hexagon {
+  clip-path: polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%);
+}
+
+.lofi-shape-item.heart {
+  background-color: #ff6b6b;
+  position: relative;
+  transform: rotate(-45deg);
+  transform-origin: center;
+}
+
+.lofi-shape-item.heart::before,
+.lofi-shape-item.heart::after {
+  content: "";
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  background-color: #ff6b6b;
+  border-radius: 50%;
+}
+
+.lofi-shape-item.heart::before {
+  top: -10px;
+  left: 0;
+}
+
+.lofi-shape-item.heart::after {
+  top: 0;
+  left: 10px;
+}
+
+.lofi-shape-item.star {
+  clip-path: polygon(50% 0%,
+      61% 35%,
+      98% 35%,
+      68% 57%,
+      79% 91%,
+      50% 70%,
+      21% 91%,
+      32% 57%,
+      2% 35%,
+      39% 35%);
+  background-color: #ffd700;
+}
+
+/* Add margin to the last shape item for the fade effect */
+.horizontal-scroll .lofi-shape-item:last-child {
+  margin-right: 40px;
+}
+
+/* AI Image Generator */
+.lofi-ai-container {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.lofi-generate-button {
+  display: flex;
+  align-items: center;
+  padding: 16px;
+  background-color: #fff;
+  border: 1px solid transparent;
+  background-image: linear-gradient(white, white), linear-gradient(to right, #4e6af6, #9969ef);
+  background-origin: border-box;
+  background-clip: content-box, border-box;
+  border-radius: 8px;
+  cursor: pointer;
+  margin-bottom: 4px;
+}
+
+.lofi-generate-plus {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 32px;
+  line-height: 1;
+  color: #666;
+  margin-right: 16px;
+}
+
+.lofi-generate-text {
+  font-size: 16px;
+  color: #333;
+  font-weight: 500;
+}
+
+.lofi-ai-examples {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.lofi-ai-example {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+}
+
+.lofi-ai-image {
+  background-color: #f2f2f2;
+  border-radius: 4px;
+  margin-bottom: 8px;
+  margin-right: 16px;
+}
+
+.lofi-ai-prompt {
+  margin: 0;
+  font-size: 14px;
+  color: #333;
+  line-height: 1.4;
+  text-align: left;
+  font-weight: 500;
+}
+
+/* Videos Section */
+.lofi-videos-grid {
+  display: flex;
+  overflow-x: auto;
+  gap: 12px;
+  scrollbar-width: none;
+  padding-bottom: 4px;
+  padding-right: 40px;
+}
+
+.lofi-videos-grid::-webkit-scrollbar {
+  display: none;
+}
+
+.lofi-video-item {
+  min-width: 160px;
+  aspect-ratio: 16 / 9;
+  background-color: #f2f2f2;
+  border-radius: 4px;
+  position: relative;
+  flex-shrink: 0;
+  margin-right: 12px;
+}
+
+.lofi-video-item:last-child {
+  margin-right: 40px;
+  /* Space for the fade effect */
+}
+
+.lofi-video-indicator {
+  position: absolute;
+  left: 12px;
+  bottom: 12px;
+  width: 36px;
+  height: 12px;
+  background-color: #ccc;
+  border-radius: 4px;
+}
+
+/* Tables Section */
+.lofi-tables-grid {
+  display: flex;
+  overflow-x: auto;
+  gap: 12px;
+  scrollbar-width: none;
+  padding-bottom: 4px;
+  padding-right: 40px;
+}
+
+.lofi-tables-grid::-webkit-scrollbar {
+  display: none;
+}
+
+.lofi-table-item {
+  min-width: 80px;
+  height: 80px;
+  border-radius: 4px;
+  flex-shrink: 0;
+
+  background-size: 20px 20px;
+}
+
+/* Audio Section */
+.lofi-audio-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.lofi-audio-item {
+  display: flex;
+  align-items: center;
+}
+
+.lofi-audio-thumbnail {
+  width: 40px;
+  height: 40px;
+  /* background-color: #f2f2f2; */
+  /* border-radius: 4px; */
+  margin-right: 12px;
+  flex-shrink: 0;
+}
+
+.lofi-audio-info {
+  flex: 1;
+  text-align: left;
+}
+
+.lofi-audio-title {
+  font-size: 14px;
+  font-weight: 500;
+  color: #333;
+  margin-bottom: 4px;
+}
+
+.lofi-audio-meta,
+.lofi-audio-genre {
+  font-size: 12px;
+  color: #666;
+}
+
+/* Browse categories grid */
+.lofi-browse-categories-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  /* gap: 12px; */
+  padding: 0;
+}
+
+.lofi-category-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: transform 0.2s ease;
+}
+
+.lofi-category-card:hover {
+  transform: translateY(-2px);
+}
+
+.lofi-category-card-image-container {
+  width: 100%;
+  aspect-ratio: 1;
+  padding: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.lofi-category-card-image {
+  width: 100%;
+  height: 100%;
+  background-color: #e0e0e0;
+  border-radius: 8px;
+  border: 1px solid #d0d0d0;
+}
+
+.lofi-category-card-image-react {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.lofi-category-card-image-react svg {
+  width: 70%;
+  height: 100%;
+  border-radius: 8px;
+
+
+}
+
+.lofi-category-card-title {
+  font-size: 13px;
+  color: #333;
+  text-align: center;
+  /* font-weight: bold; */
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+
+
+  font-family: 'Canva Sans', sans-serif;
+}
+
+/* Trending Collections */
+.lofi-trending-collections-scroll {
+  padding: 0;
+  margin-right: -16px;
+}
+
+.lofi-trending-item-container {
+  margin-right: 16px;
+  flex-shrink: 0;
+  cursor: pointer;
+  width: 240px;
+  border-radius: 0;
+}
+
+.lofi-trending-item {
+  width: 240px;
+  flex-shrink: 0;
+  border-radius: 4px;
+  overflow: hidden;
+  background-color: #fff;
+  box-shadow: none;
+}
+
+.lofi-trending-item-container:last-child {
+  margin-right: 40px;
+  /* Space for the fade effect */
+}
+
+.lofi-trending-item-image {
+  width: 100%;
+  height: 160px;
+  background-color: #f2f2f2;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 8px;
+}
+
+.lofi-trending-item-image img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: cover;
+}
+
+.lofi-trending-item-content {
+  padding: 0;
+  text-align: left;
+}
+
+.lofi-trending-item-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #333;
+  margin: 0 0 4px 0;
+  line-height: 1.3;
+}
+
+.lofi-trending-item-subtitle {
+  font-size: 14px;
+  color: #888;
+  margin: 0;
+  font-weight: normal;
+}
+
+/* Scrollable Grid for Items */
+.lofi-scroll-grid-container {
+  overflow: hidden;
+  position: relative;
+  width: 100%;
+  margin-right: 16px;
+}
+
+.lofi-scroll-grid {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 8px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  /* Firefox */
+  padding-bottom: 8px;
+  padding-right: 40px;
+}
+
+.lofi-scroll-grid::-webkit-scrollbar {
+  display: none;
+  /* Chrome, Safari, Edge */
+}
+
+.lofi-scroll-grid-item {
+  min-width: 80px;
+  height: 80px;
+  background-color: #f2f2f2;
+  border-radius: 8px;
+  flex-shrink: 0;
+}
+
+/* For specific sections, customize the grid layout */
+#recently-used .lofi-scroll-grid {
+  display: grid;
+  grid-auto-flow: column;
+  grid-template-rows: repeat(3, 80px);
+  grid-template-columns: repeat(4, 80px);
+  grid-auto-columns: 80px;
+}
+
+#graphics .lofi-scroll-grid,
+#photos .lofi-scroll-grid,
+#frames .lofi-scroll-grid,
+#charts .lofi-scroll-grid,
+#grids .lofi-scroll-grid {
+  display: grid;
+  grid-auto-flow: column;
+  grid-template-rows: repeat(1, 80px);
+  grid-auto-columns: 80px;
+}
+
+.lofi-trending-item-label {
+  /* position: absolute; */
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  color: white;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+/* Scrollable row container with fades */
+.lofi-scrollable-container {
+  position: relative;
+  width: 100%;
+  margin-bottom: 8px;
+}
+
+.lofi-fade-left,
+.lofi-fade-right {
+  position: absolute;
+  top: 0;
+  bottom: 8px;
+  width: 40px;
+  pointer-events: none;
+  z-index: 1;
+  opacity: 1;
+  transition: opacity 0.3s ease;
+}
+
+.lofi-fade-left.hidden,
+.lofi-fade-right.hidden {
+  opacity: 0;
+}
+
+.lofi-fade-left.visible,
+.lofi-fade-right.visible {
+  opacity: 1;
+}
+
+.lofi-fade-left {
+  left: 0;
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.63) 0%, rgba(255, 255, 255, 0) 100%);
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  padding-left: 8px;
+}
+
+.lofi-fade-right {
+  right: 0;
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0) 0%, rgba(255, 255, 255, 0.63) 100%);
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding-right: 8px;
+}
+
+.lofi-scroll-arrow,
+.lofi-scroll-arrow-left {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  /* background-color: white; */
+  border-radius: 50%;
+  /* box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1); */
+  cursor: pointer;
+  color: #666;
+  z-index: 2;
+  pointer-events: auto;
+}
+
+/* Website Components Styles */
+.lofi-website-components-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+  padding: 0;
+}
+
+.lofi-website-item {
+  display: flex;
+  align-items: flex-start;
+  padding: 12px;
+  background-color: #ffffff;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.lofi-website-item:hover {
+  border-color: #8b5cf6;
+  box-shadow: 0 2px 8px rgba(139, 92, 246, 0.15);
+  transform: translateY(-1px);
+}
+
+.lofi-website-item-icon {
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #f8f9fa;
+  border-radius: 6px;
+  margin-right: 12px;
+  color: #666;
+}
+
+.lofi-website-item:hover .lofi-website-item-icon {
+  background-color: #8b5cf6;
+  color: #ffffff;
+}
+
+.lofi-website-item-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.lofi-website-item-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #333;
+  margin: 0 0 4px 0;
+  line-height: 1.3;
+}
+
+.lofi-website-item-description {
+  font-size: 12px;
+  color: #666;
+  margin: 0;
+  line-height: 1.4;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.lofi-website-item:hover .lofi-website-item-title {
+  color: #8b5cf6;
+}
+
+/* Different website component type styling */
+.lofi-website-item.navigation .lofi-website-item-icon {
+  background-color: #e3f2fd;
+  color: #1976d2;
+}
+
+.lofi-website-item.navigation:hover .lofi-website-item-icon {
+  background-color: #1976d2;
+  color: #ffffff;
+}
+
+.lofi-website-item.header .lofi-website-item-icon {
+  background-color: #f3e5f5;
+  color: #7b1fa2;
+}
+
+.lofi-website-item.header:hover .lofi-website-item-icon {
+  background-color: #7b1fa2;
+  color: #ffffff;
+}
+
+.lofi-website-item.footer .lofi-website-item-icon {
+  background-color: #e8f5e8;
+  color: #388e3c;
+}
+
+.lofi-website-item.footer:hover .lofi-website-item-icon {
+  background-color: #388e3c;
+  color: #ffffff;
+}
+
+.lofi-website-item.form .lofi-website-item-icon {
+  background-color: #fff3e0;
+  color: #f57c00;
+}
+
+.lofi-website-item.form:hover .lofi-website-item-icon {
+  background-color: #f57c00;
+  color: #ffffff;
+}
+
+.lofi-website-item.button .lofi-website-item-icon {
+  background-color: #fce4ec;
+  color: #c2185b;
+}
+
+.lofi-website-item.button:hover .lofi-website-item-icon {
+  background-color: #c2185b;
+  color: #ffffff;
+}
+
+.lofi-website-item.banner .lofi-website-item-icon {
+  background-color: #e0f2f1;
+  color: #00695c;
+}
+
+.lofi-website-item.banner:hover .lofi-website-item-icon {
+  background-color: #00695c;
+  color: #ffffff;
+}
+
+/* Website Components Horizontal Scroll Styles */
+.website-components-scroll {
+  padding: 0;
+  margin-right: -16px;
+}
+
+/* Navigation Menu Styles */
+.lofi-navigation-menu-container {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 10px;
+}
+
+.lofi-navigation-image {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: grab;
+  border-radius: 6px;
+  transition: background-color 0.2s ease;
+  box-shadow:
+    0px 0.379px 0px 0px rgba(14, 19, 24, 0) inset,
+    0px 0px 0px 0.379px rgba(14, 19, 24, 0) inset,
+    0px 0px 0px 0.379px rgba(64, 87, 109, 0.07),
+    0px 6.062px 12.124px 0px rgba(24, 44, 89, 0.14),
+    0px 18.186px 18.186px 0px rgba(24, 44, 89, 0.07);
+}
+
+.lofi-navigation-image:active {
+  cursor: grabbing;
+}
+
+.lofi-navigation-image svg {
+  max-width: 100%;
+  max-height: 100%;
+  width: 100%;
+  height: auto;
+  pointer-events: none;
+}
+
+.lofi-navigation-menu-item {
+  min-width: 195px;
+  background-color: #f1f2f4;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  cursor: default;
+  position: relative;
+  user-select: none;
+  /* Prevent text selection during drag */
+  border: 1px solid #eee;
+  border-radius: 8px;
+  padding: 20px;
+  /* margin: 4px; */
+  z-index: 10;
+  /* box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1); */
+  touch-action: none;
+  /* Important for touch screens */
+  height: 120px;
+  width: 230px;
+}
+
+.lofi-navigation-menu-item.clickable {
+  cursor: pointer;
+}
+
+.lofi-navigation-menu-item.clickable:hover {
+  /* background-color: #E8E9EB; */
+  /* border-color: #8b3dff; */
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(139, 61, 255, 0.15);
+}
+
+.lofi-navigation-menu-item.clickable:active {
+  transform: translateY(0);
+  box-shadow: 0 1px 4px rgba(139, 61, 255, 0.2);
+}
+
+/* Website component small items for buttons and footers */
+.website-components-scroll .lofi-scroll-grid-item {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #f1f2f4;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  margin-right: 8px;
+}
+
+.website-components-scroll .lofi-scroll-grid-item:hover {
+  background-color: #e8e9eb;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+}
+
+.website-components-scroll .lofi-scroll-grid-item:active {
+  transform: scale(0.98);
+}
+
+.website-components-scroll .lofi-scroll-grid-item svg {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}

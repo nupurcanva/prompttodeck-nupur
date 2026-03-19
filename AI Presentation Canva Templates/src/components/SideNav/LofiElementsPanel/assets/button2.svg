@@ -1,0 +1,32 @@
+<svg width="140" height="126" viewBox="0 0 140 126" fill="none" xmlns="http://www.w3.org/2000/svg">
+<rect x="9" width="120" height="120" rx="8" fill="#F1F2F4"/>
+<g filter="url(#filter0_ddd_431_46014)">
+<rect x="24" y="42" width="92" height="36" rx="18" fill="#0E1318" shape-rendering="crispEdges"/>
+<rect x="24.45" y="42.45" width="91.1" height="35.1" rx="17.55" stroke="#0E1318" stroke-width="0.9" shape-rendering="crispEdges"/>
+<path d="M54.8133 64H51.9405V54.8776H55.0779C57.2325 54.8776 57.8247 55.8604 57.8247 57.1078C57.8247 58.393 57.0057 59.023 56.0103 59.2498V59.275C57.4971 59.464 58.1901 60.2704 58.1901 61.5304C58.1901 63.3952 56.7915 64 54.8133 64ZM53.0871 58.8718H54.4101C55.4055 58.8718 56.6529 58.5946 56.6529 57.2716C56.6529 56.1376 55.9977 55.8352 54.7503 55.8352H53.0871V58.8718ZM53.0871 63.0298H54.6495C55.9725 63.0298 56.9679 62.8282 56.9679 61.4548C56.9679 60.2452 56.0607 59.8294 54.9015 59.8294H53.0871V63.0298ZM59.6382 61.921V57.5236H60.7848V61.7446C60.7848 62.6392 60.999 63.1306 61.9566 63.1306C62.7 63.1306 63.4938 62.6518 63.834 62.3368V57.5236H64.9806V64H63.9852L63.9096 63.2566C63.2796 63.7732 62.511 64.126 61.6164 64.126C60.243 64.126 59.6382 63.37 59.6382 61.921ZM74.4313 62.8912L74.6329 63.7228C74.3179 63.937 73.6501 64.1512 73.0453 64.1512C71.8357 64.1512 71.2183 63.5968 71.2183 62.299V58.4434H68.3329V62.1478C68.3329 62.8282 68.4715 63.2062 69.2527 63.2062C69.6055 63.2062 70.0465 63.0676 70.3237 62.9164L70.5379 63.748C70.2103 63.9622 69.5803 64.1512 69.0133 64.1512C67.8037 64.1512 67.1863 63.5968 67.1863 62.299V58.4434H66.1909V57.5236H67.1863V55.6462L68.3329 55.4698V57.5236H71.2183V55.6462L72.3649 55.4698V57.5236H74.1541V58.4434H72.3649V62.1478C72.3649 62.8282 72.5161 63.2062 73.2973 63.2062C73.6879 63.2062 74.1541 63.0424 74.4313 62.8912ZM78.2548 64.1512C76.012 64.1512 75.2686 62.7022 75.2686 60.787C75.2686 58.6954 76.3522 57.385 78.4186 57.385C80.4724 57.385 81.3166 58.708 81.3166 60.6358C81.3166 62.7652 80.4346 64.1512 78.2548 64.1512ZM78.3178 63.2314C79.4392 63.2314 80.1196 62.551 80.1196 60.7114C80.1196 58.9222 79.4896 58.33 78.3682 58.33C77.2216 58.33 76.453 59.0104 76.453 60.7366C76.453 62.4502 77.0578 63.2314 78.3178 63.2314ZM88.3489 59.6026V64H87.2023V59.779C87.2023 58.8844 86.8747 58.393 85.9927 58.393C85.2493 58.393 84.4429 58.8718 84.1027 59.1742V64H82.9561V57.5236H83.9641L84.0271 58.2922C84.6571 57.7882 85.4635 57.385 86.3581 57.385C87.7441 57.385 88.3489 58.141 88.3489 59.6026Z" fill="white"/>
+</g>
+<defs>
+<filter id="filter0_ddd_431_46014" x="0" y="34" width="140" height="92" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+<feFlood flood-opacity="0" result="BackgroundImageFix"/>
+<feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha"/>
+<feOffset dy="24"/>
+<feGaussianBlur stdDeviation="12"/>
+<feComposite in2="hardAlpha" operator="out"/>
+<feColorMatrix type="matrix" values="0 0 0 0 0.0941176 0 0 0 0 0.172549 0 0 0 0 0.34902 0 0 0 0.07 0"/>
+<feBlend mode="normal" in2="BackgroundImageFix" result="effect1_dropShadow_431_46014"/>
+<feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha"/>
+<feOffset dy="8"/>
+<feGaussianBlur stdDeviation="8"/>
+<feComposite in2="hardAlpha" operator="out"/>
+<feColorMatrix type="matrix" values="0 0 0 0 0.0941176 0 0 0 0 0.172549 0 0 0 0 0.34902 0 0 0 0.14 0"/>
+<feBlend mode="normal" in2="effect1_dropShadow_431_46014" result="effect2_dropShadow_431_46014"/>
+<feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha"/>
+<feMorphology radius="0.5" operator="dilate" in="SourceAlpha" result="effect3_dropShadow_431_46014"/>
+<feOffset/>
+<feComposite in2="hardAlpha" operator="out"/>
+<feColorMatrix type="matrix" values="0 0 0 0 0.25098 0 0 0 0 0.341176 0 0 0 0 0.427451 0 0 0 0.07 0"/>
+<feBlend mode="normal" in2="effect2_dropShadow_431_46014" result="effect3_dropShadow_431_46014"/>
+<feBlend mode="normal" in="SourceGraphic" in2="effect3_dropShadow_431_46014" result="shape"/>
+</filter>
+</defs>
+</svg>

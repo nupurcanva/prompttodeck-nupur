@@ -1,0 +1,158 @@
+---
+description: "Load this rule when working with Canva templates, implementing template search functionality, integrating the Canva templates API (api.playground.canva-experiments.com/canva/templates/search), or building features that display/browse public Canva templates in prototypes."
+alwaysApply: false
+---
+# Canva Templates API Integration
+
+## Overview
+This guide explains how to integrate Canva's public template search API into your prototypes. The API allows you to search for and display Canva templates with preview images, metadata, and color palettes.
+
+## Endpoint
+```
+https://api.playground.canva-experiments.com/canva/templates/search
+```
+
+## Authentication
+The API uses Bearer token authentication. Get the token from cookies the same way the LLM GenAI feature does:
+
+```typescript
+const getToken = (): string | null => {
+  const cookies = document.cookie.split(";");
+  const authCookie = cookies.find((cookie) =>
+    cookie.trim().startsWith("auth_token=")
+  );
+  if (!authCookie) {
+    return null;
+  }
+  return authCookie.split("=")[1];
+};
+```
+
+## Request Parameters
+- `query` (required): Search term for templates (e.g., "retro posters", "birthday invitation")
+- `limit` (optional): Number of results to return (max 100, default 20)
+- `mapFields` (optional): Whether to map response fields
+
+## Making a Request
+```typescript
+const params = new URLSearchParams();
+params.set("query", "retro posters");
+params.set("limit", "20");
+
+const response = await fetch(
+  `https://api.playground.canva-experiments.com/canva/templates/search?${params.toString()}`,
+  {
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${getToken()}`,
+    },
+  }
+);
+
+const data: SearchResponse = await response.json();
+```
+
+## Response Structure
+```typescript
+interface SearchResponse {
+  query: string;           // The search query used
+  ids: string[];          // Array of template IDs
+  count: number;          // Total number of results
+  mapped: boolean;        // Whether fields were mapped
+  results: Template[];    // Array of template objects
+}
+
+interface Template {
+  id: string;                    // Template ID (e.g., "EAFS0-5VVaU")
+  version: number;               // Template version
+  description: string;           // Template title/description
+  tags: string[];               // Search tags
+  categories: string[];         // Template categories
+  language: string;             // Language code (e.g., "en", "en-GB")
+  contentType: string;          // Type of content (e.g., "design")
+  createdAt: string;            // ISO timestamp
+  ownerId: string;              // Owner user ID
+  teamId: string;               // Team ID
+  preview: TemplatePreview;     // Preview image details
+  cdfUrl: string;               // CDF file URL
+  colorPalette: ColorInfo[];    // Color palette used
+  pages: PageInfo[];            // Page information
+}
+
+interface TemplatePreview {
+  url: string;        // Preview image URL
+  width: number;      // Image width in pixels
+  height: number;     // Image height in pixels
+  watermarked: boolean; // Whether image has watermark
+}
+
+interface ColorInfo {
+  hex: string;        // Color hex code (e.g., "#141b19")
+  percentage: number; // Percentage of template using this color
+}
+```
+
+## Displaying Results
+Use the `preview.url` to display template thumbnails:
+
+```tsx
+<img
+  src={template.preview.url}
+  alt={template.description}
+  loading="lazy"
+  className="template-image"
+/>
+```
+
+## Example Response
+```json
+{
+  "query": "retro posters",
+  "ids": [],
+  "count": 5,
+  "mapped": true,
+  "results": [
+    {
+      "id": "EAFS0-5VVaU",
+      "version": 2,
+      "description": "Yellow Black Retro 70s Quote Poster",
+      "tags": ["simplistic", "minimalist", "70s", "retro poster"],
+      "categories": ["ART", "CLASSIC", "MINIMALIST", "POSTER", "RETRO"],
+      "language": "en",
+      "contentType": "design",
+      "preview": {
+        "url": "https://template.canva.com/EAFS0-5VVaU/2/0/283w-AlnzLVqMMpE.jpg",
+        "width": 283,
+        "height": 400,
+        "watermarked": false
+      },
+      "colorPalette": [
+        {"hex": "#141b19", "percentage": 29},
+        {"hex": "#feb10f", "percentage": 5}
+      ]
+    }
+  ]
+}
+```
+
+## Common Use Cases
+- Template discovery and browsing
+- Inspiration galleries
+- Design starting points
+- Content type filtering by search terms
+- Color palette exploration
+
+## Error Handling
+Always handle potential errors:
+```typescript
+try {
+  const response = await fetch(/* ... */);
+  if (!response.ok) {
+    throw new Error(`HTTP error! status: ${response.status}`);
+  }
+  // Process response
+} catch (err) {
+  console.error("Search error:", err);
+  // Show error to user
+}
+```
