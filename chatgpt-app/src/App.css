@@ -1176,30 +1176,21 @@ html, body, #root {
   flex-shrink: 0;
 }
 
-/* Edit button - opens document in full screen (replaces Enhance rectangle) */
+/* Edit button - same style as Copy/Download: light grey text, no border, no icon */
 .remix-edit-doc-btn {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px 16px;
-  background: transparent;
-  border: 1px solid rgba(13, 13, 13, 0.2);
-  border-radius: 8px;
+  background: none;
+  border: none;
   font-size: 14px;
-  font-weight: 500;
-  color: #0d0d0d;
+  font-weight: 400;
+  color: #8e8ea0;
   cursor: pointer;
+  padding: 0;
   font-family: inherit;
-  transition: background 0.15s, border-color 0.15s;
+  transition: color 0.15s;
 }
 
 .remix-edit-doc-btn:hover {
-  background: rgba(13, 13, 13, 0.04);
-  border-color: rgba(13, 13, 13, 0.3);
-}
-
-.remix-edit-doc-btn svg {
-  flex-shrink: 0;
+  color: #0d0d0d;
 }
 
 /* Read-only content preview in chat - scrolls with heading, click to edit in full screen */
