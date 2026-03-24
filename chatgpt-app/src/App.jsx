@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import './App.css'
+import { EXP, searchPrefillFromPrompt } from './experimentFlow.js'
 
 function App() {
   const [prompt, setPrompt] = useState('')
@@ -24,6 +25,7 @@ function App() {
   const [chooseSlidesItem, setChooseSlidesItem] = useState(null) // design for choose-slides fullscreen
   const [selectedPageIds, setSelectedPageIds] = useState(new Set()) // page IDs selected in choose-slides
   const [editDocumentFullscreenOpen, setEditDocumentFullscreenOpen] = useState(false)
+  const [previewWithSlidePick, setPreviewWithSlidePick] = useState(false)
   const USE_INLINE_EDIT_DOCUMENT = false // Set true to restore inline Enhance flow
   const [remixContent, setRemixContent] = useState(`1. Cover — Deploy 2026
 Opening slide with event branding, date, and venue. Establish the Deploy 2026 identity.
@@ -323,6 +325,12 @@ Clear recommendations and what you need from the audience.
   const handleRemixClick = (item) => {
     setRemixItem(item)
     setPreviewItem(null)
+    setPreviewWithSlidePick(false)
+    if (EXP.autoSelectSlidesOverride && item?.pages?.length) {
+      const pages = item.pages
+      const take = Math.min(pages.length, Math.max(6, Math.ceil(pages.length * 0.7)))
+      setSelectedPageIds(new Set(pages.slice(0, take).map((p) => p.id)))
+    }
   }
 
   const handleGenerateDesign = () => {
@@ -390,6 +398,39 @@ Clear recommendations and what you need from the audience.
       if (thumbsIntervalId) clearInterval(thumbsIntervalId)
     }
   }, [widgetStep, generatingPages.length])
+
+  // Experiment: first entry — default-selected template + search prefill (once per session)
+  useEffect(() => {
+    if (!EXP.defaultSelectedFirstEntry && !EXP.prefillSearchFromPrompt) return
+    if (widgetStep !== 'create-from-existing' || flowStep !== 'create-from-existing') return
+    try {
+      if (sessionStorage.getItem('exp-create-bootstrapped')) return
+      sessionStorage.setItem('exp-create-bootstrapped', '1')
+    } catch (_) {
+      return
+    }
+    setPreSelectedDesign((prev) => {
+      if (prev) return prev
+      if (!EXP.defaultSelectedFirstEntry) return prev
+      if (searchSubmitted && searchQuery.trim()) return prev
+      return brandTemplates[0]
+    })
+    setSearchQuery((prevQ) => {
+      if (!EXP.prefillSearchFromPrompt) return prevQ
+      if (prevQ.trim()) return prevQ
+      const src = submittedPrompt || DECK_PROMPT
+      const q = searchPrefillFromPrompt(src)
+      return q || prevQ
+    })
+  }, [widgetStep, flowStep, submittedPrompt, searchSubmitted, searchQuery])
+
+  // When opening preview from browse (not remix adjust), default all slides selected for slide-pick UX
+  useEffect(() => {
+    if (!previewItem || !EXP.slideSelectionInPreview) return
+    if (remixItem && previewItem.id === remixItem.id) return
+    const pages = previewItem.pages || createPages()
+    setSelectedPageIds(new Set(pages.map((p) => p.id)))
+  }, [previewItem?.id, remixItem?.id])
 
   // Sync generating state to localStorage so Canva editor can pick it up when opened
   useEffect(() => {
@@ -725,17 +766,26 @@ Clear recommendations and what you need from the audience.
                         </div>
                         <div className="remix-template-actions">
                           <button type="button" className="remix-btn-outline" onClick={() => { setRemixItem(null); setEditDocumentFullscreenOpen(false); }}>Change selection</button>
-                          <button type="button" className="remix-btn-outline" onClick={() => {
-                            const pages = remixItem.pages || createPages()
-                            setSelectedPageIds(new Set(pages.map(p => p.id)))
-                            setChooseSlidesItem(remixItem)
-                          }}>
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                              <polyline points="20 6 9 17 4 12"/>
-                            </svg>
-                            Choose slides
-                          </button>
+                          {EXP.slideSelectionInPreview ? (
+                            <button type="button" className="remix-btn-outline" onClick={() => { setPreviewItem(remixItem); setPreviewWithSlidePick(true); }}>
+                              Adjust slides in preview
+                            </button>
+                          ) : (
+                            <button type="button" className="remix-btn-outline" onClick={() => {
+                              const pages = remixItem.pages || createPages()
+                              setSelectedPageIds(new Set(pages.map(p => p.id)))
+                              setChooseSlidesItem(remixItem)
+                            }}>
+                              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <polyline points="20 6 9 17 4 12"/>
+                              </svg>
+                              Choose slides
+                            </button>
+                          )}
                         </div>
+                        {EXP.autoSelectSlidesOverride && EXP.slideSelectionInPreview && (
+                          <p className="experiment-auto-slide-note">Slides were auto-selected (mock CDA). Use &quot;Adjust slides in preview&quot; to override.</p>
+                        )}
                       </div>
                       <div className="remix-review-section">
                         <h3 className="remix-review-label">Review the content</h3>
@@ -828,7 +878,7 @@ Clear recommendations and what you need from the audience.
                     </>
                   ) : (
                     <>
-                    <div className="create-from-existing">
+                    <div className={`create-from-existing ${EXP.flatWidgetTransitions ? 'experiment-flat' : ''}`}>
                       <div className="create-from-existing-header">
                         <button type="button" className="back-btn" onClick={() => { setWidgetStep('options'); setFlowStep('options'); setPreSelectedDesign(null); }} aria-label="Back to options">
                           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -837,6 +887,10 @@ Clear recommendations and what you need from the audience.
                         </button>
                         <h2 className="section-title create-from-existing-title">Create from existing design or template</h2>
                       </div>
+                      {EXP.flatWidgetTransitions && (
+                        <p className="experiment-flow-label">New step in chat: pick a design. You can change it anytime with &quot;Change selection&quot; — no extra navigation depth.</p>
+                      )}
+                      {!EXP.unifiedTemplateView && (
                       <div className="segmented-control">
                         <button type="button" className={`segmented-tab ${createTab === 'brand-template' ? 'active' : ''}`} onClick={() => handleTabClick('brand-template')}>Brand template ({brandTemplateCount})</button>
                         <button type="button" className={`segmented-tab ${createTab === 'your-designs' ? 'active' : ''}`} onClick={() => handleTabClick('your-designs')}>Your designs ({yourDesignsCount})</button>
@@ -844,7 +898,21 @@ Clear recommendations and what you need from the audience.
                         <button type="button" className={`segmented-tab ${createTab === 'search' ? 'active' : ''}`} onClick={() => handleTabClick('search')}>Search by URL</button>
                         )}
                       </div>
-                      {preSelectedDesign && (
+                      )}
+                      {preSelectedDesign && EXP.earlyDesignHero && (
+                        <div className="early-design-hero">
+                          <div className="early-design-hero-thumb">
+                            {preSelectedDesign.thumb ? <img src={preSelectedDesign.thumb} alt="" /> : null}
+                          </div>
+                          <div className="early-design-hero-info">
+                            <p className="early-design-hero-label">Selected design</p>
+                            <p className="early-design-hero-name">{preSelectedDesign.name}</p>
+                            <p className="early-design-hero-type">{preSelectedDesign.type}</p>
+                            <button type="button" className="early-design-hero-change" onClick={() => setPreSelectedDesign(null)}>Change selection</button>
+                          </div>
+                        </div>
+                      )}
+                      {preSelectedDesign && !EXP.earlyDesignHero && !EXP.unifiedTemplateView && (
                         <>
                           <form className="template-search-bar" onSubmit={handleTemplateSearch}>
                             <img src="/svg/startIcon-1.svg" alt="" className="template-search-icon" width={24} height={24} aria-hidden />
@@ -863,7 +931,134 @@ Clear recommendations and what you need from the audience.
                           </div>
                         </>
                       )}
-                      {!preSelectedDesign && (createTab === 'brand-template' || createTab === 'your-designs') && (
+                      {preSelectedDesign && EXP.earlyDesignHero && !EXP.unifiedTemplateView && (
+                        <>
+                          <p className="search-secondary-heading">Browse or search to pick a different design</p>
+                          <form className="template-search-bar" onSubmit={handleTemplateSearch}>
+                            <img src="/svg/startIcon-1.svg" alt="" className="template-search-icon" width={24} height={24} aria-hidden />
+                            <input
+                              type="text"
+                              className="template-search-input"
+                              placeholder={createTab === 'brand-template' ? 'Search Brand Templates' : 'Search your designs'}
+                              value={searchQuery}
+                              onChange={(e) => handleSearchQueryChange(e.target.value)}
+                            />
+                            <button type="submit" className="template-search-btn">Search</button>
+                          </form>
+                          <p className="search-finding-heading">Finding results from Canva</p>
+                          <div className="template-list">
+                            <TemplateItem key={preSelectedDesign.id} item={preSelectedDesign} onPreview={setPreviewItem} onRemix={handleRemixClick} />
+                          </div>
+                        </>
+                      )}
+                      {preSelectedDesign && EXP.earlyDesignHero && EXP.unifiedTemplateView && (
+                        <>
+                          <p className="search-secondary-heading">Browse all templates and designs below, or search</p>
+                          <form className="template-search-bar" onSubmit={handleTemplateSearch}>
+                            <img src="/svg/startIcon-1.svg" alt="" className="template-search-icon" width={24} height={24} aria-hidden />
+                            <input
+                              type="text"
+                              className="template-search-input"
+                              placeholder="Search brand templates and your designs"
+                              value={searchQuery}
+                              onChange={(e) => handleSearchQueryChange(e.target.value)}
+                            />
+                            <button type="submit" className="template-search-btn">Search</button>
+                          </form>
+                        </>
+                      )}
+                      {EXP.unifiedTemplateView && !preSelectedDesign && (
+                        <>
+                          <form className="template-search-bar" onSubmit={handleTemplateSearch}>
+                            <img src="/svg/startIcon-1.svg" alt="" className="template-search-icon" width={24} height={24} aria-hidden />
+                            <input
+                              type="text"
+                              className="template-search-input"
+                              placeholder="Search brand templates and your designs"
+                              value={searchQuery}
+                              onChange={(e) => handleSearchQueryChange(e.target.value)}
+                            />
+                            <button type="submit" className="template-search-btn">Search</button>
+                          </form>
+                          {!isSearching && (
+                            <>
+                              <h3 className="unified-section-title">Brand templates</h3>
+                              <div className="template-list">
+                                {brandTemplates.map(item => <TemplateItem key={item.id} item={item} onPreview={setPreviewItem} onRemix={handleRemixClick} />)}
+                              </div>
+                              <h3 className="unified-section-title">Recent designs</h3>
+                              <div className="template-list">
+                                {yourDesigns.map(item => <TemplateItem key={item.id} item={item} onPreview={setPreviewItem} onRemix={handleRemixClick} />)}
+                              </div>
+                            </>
+                          )}
+                          {isSearching && (
+                            <>
+                              <p className="search-finding-heading">Finding results from Canva</p>
+                              {(brandTemplateSearchResults.length > 0 || (searchQueryResult.length > 0 && createTab === 'brand-template')) && (
+                                <>
+                                  <h3 className="unified-section-title">Brand templates</h3>
+                                  <div className="template-list template-search-results">
+                                    {brandTemplateSearchResults.map(item => <TemplateItem key={item.id} item={item} onPreview={setPreviewItem} onRemix={handleRemixClick} />)}
+                                    {createTab === 'brand-template' && searchQueryResult.map(item => <TemplateItem key={item.id} item={item} onPreview={setPreviewItem} onRemix={handleRemixClick} />)}
+                                  </div>
+                                </>
+                              )}
+                              {(yourDesignsSearchResults.length > 0 || canvaNewResults.length > 0 || (searchQueryResult.length > 0 && createTab === 'your-designs')) && (
+                                <>
+                                  <h3 className="unified-section-title">Recent designs</h3>
+                                  <div className="template-list template-search-results">
+                                    {yourDesignsSearchResults.map(item => <TemplateItem key={item.id} item={item} onPreview={setPreviewItem} onRemix={handleRemixClick} />)}
+                                    {canvaNewResults.map(item => <TemplateItem key={item.id} item={item} onPreview={setPreviewItem} onRemix={handleRemixClick} />)}
+                                    {createTab === 'your-designs' && searchQueryResult.map(item => <TemplateItem key={item.id} item={item} onPreview={setPreviewItem} onRemix={handleRemixClick} />)}
+                                  </div>
+                                </>
+                              )}
+                            </>
+                          )}
+                        </>
+                      )}
+                      {EXP.unifiedTemplateView && preSelectedDesign && (
+                        <>
+                          {!isSearching && (
+                            <>
+                              <h3 className="unified-section-title">Brand templates</h3>
+                              <div className="template-list">
+                                {brandTemplates.filter((t) => t.id !== preSelectedDesign.id).map(item => <TemplateItem key={item.id} item={item} onPreview={setPreviewItem} onRemix={handleRemixClick} />)}
+                              </div>
+                              <h3 className="unified-section-title">Recent designs</h3>
+                              <div className="template-list">
+                                {yourDesigns.filter((d) => d.id !== preSelectedDesign.id).map(item => <TemplateItem key={item.id} item={item} onPreview={setPreviewItem} onRemix={handleRemixClick} />)}
+                              </div>
+                            </>
+                          )}
+                          {isSearching && (
+                            <>
+                              <p className="search-finding-heading">Finding results from Canva</p>
+                              {(brandTemplateSearchResults.length > 0 || (searchQueryResult.length > 0 && createTab === 'brand-template')) && (
+                                <>
+                                  <h3 className="unified-section-title">Brand templates</h3>
+                                  <div className="template-list template-search-results">
+                                    {brandTemplateSearchResults.map(item => <TemplateItem key={item.id} item={item} onPreview={setPreviewItem} onRemix={handleRemixClick} />)}
+                                    {createTab === 'brand-template' && searchQueryResult.map(item => <TemplateItem key={item.id} item={item} onPreview={setPreviewItem} onRemix={handleRemixClick} />)}
+                                  </div>
+                                </>
+                              )}
+                              {(yourDesignsSearchResults.length > 0 || canvaNewResults.length > 0 || (searchQueryResult.length > 0 && createTab === 'your-designs')) && (
+                                <>
+                                  <h3 className="unified-section-title">Recent designs</h3>
+                                  <div className="template-list template-search-results">
+                                    {yourDesignsSearchResults.map(item => <TemplateItem key={item.id} item={item} onPreview={setPreviewItem} onRemix={handleRemixClick} />)}
+                                    {canvaNewResults.map(item => <TemplateItem key={item.id} item={item} onPreview={setPreviewItem} onRemix={handleRemixClick} />)}
+                                    {createTab === 'your-designs' && searchQueryResult.map(item => <TemplateItem key={item.id} item={item} onPreview={setPreviewItem} onRemix={handleRemixClick} />)}
+                                  </div>
+                                </>
+                              )}
+                            </>
+                          )}
+                        </>
+                      )}
+                      {!EXP.unifiedTemplateView && !preSelectedDesign && (createTab === 'brand-template' || createTab === 'your-designs') && (
                         <>
                           <form className="template-search-bar" onSubmit={handleTemplateSearch}>
                             <img src="/svg/startIcon-1.svg" alt="" className="template-search-icon" width={24} height={24} aria-hidden />
@@ -944,7 +1139,9 @@ Clear recommendations and what you need from the audience.
                           ? "Review the content and click Edit to make changes in full screen, then click Generate design."
                           : widgetStep === 'generate-from-scratch'
                             ? "Pick your tone and hit Generate design when ready."
-                            : "Pick one of the options above to get started."
+                            : widgetStep === 'create-from-existing'
+                              ? "Experiment: a design may be pre-selected; search is prefilled from your prompt when helpful. Browse both brand templates and recent designs in one list."
+                              : "Pick one of the options above to get started."
                     }
                   />
                 )}
@@ -1034,8 +1231,8 @@ Clear recommendations and what you need from the audience.
         </div>
       </main>
 
-      {/* Choose slides fullscreen - select pages to edit */}
-      {chooseSlidesItem && (
+      {/* Choose slides fullscreen — skipped when slide selection lives in preview */}
+      {chooseSlidesItem && !EXP.slideSelectionInPreview && (
         <div className="preview-fullscreen choose-slides-fullscreen">
           <header className="preview-header">
             <div className="preview-header-left">
@@ -1185,15 +1382,15 @@ Clear recommendations and what you need from the audience.
         </div>
       )}
 
-      {/* Full-screen design preview - all pages in grid */}
+      {/* Full-screen design preview — optional slide selection (experiment) */}
       {previewItem && (
-        <div className="preview-fullscreen">
+        <div className={`preview-fullscreen ${EXP.slideSelectionInPreview && previewWithSlidePick ? 'choose-slides-fullscreen' : ''}`}>
           <header className="preview-header">
             <div className="preview-header-left">
               <button
                 type="button"
                 className="preview-close-btn"
-                onClick={() => setPreviewItem(null)}
+                onClick={() => { setPreviewItem(null); setPreviewWithSlidePick(false); }}
                 aria-label="Close preview"
               >
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -1201,23 +1398,96 @@ Clear recommendations and what you need from the audience.
                   <line x1="6" y1="6" x2="18" y2="18"/>
                 </svg>
               </button>
-              <h1 className="preview-title">{previewItem.name}</h1>
+              <h1 className="preview-title">
+                {EXP.slideSelectionInPreview && previewWithSlidePick ? 'Select slides to include' : previewItem.name}
+              </h1>
             </div>
           </header>
           <main className="preview-main">
+            {EXP.slideSelectionInPreview && previewWithSlidePick && (
+              <p className="experiment-preview-slide-hint">Tap slides to include or exclude. Then continue to editing.</p>
+            )}
             <div className="preview-pages-grid">
-              {(previewItem.pages || createPages()).map((page) => (
-                <div key={page.id} className="preview-page-card">
-                  <p className="preview-page-label">{page.label}</p>
-                  <div className="preview-page-thumb">
-                    <img src={page.thumb} alt={page.label} />
+              {(previewItem.pages || createPages()).map((page) => {
+                const slideMode = EXP.slideSelectionInPreview && previewWithSlidePick
+                const isSelected = selectedPageIds.has(page.id)
+                const toggleSlide = () => {
+                  setSelectedPageIds((prev) => {
+                    const next = new Set(prev)
+                    if (next.has(page.id)) next.delete(page.id)
+                    else next.add(page.id)
+                    return next
+                  })
+                }
+                return (
+                  <div
+                    key={page.id}
+                    role={slideMode ? 'button' : undefined}
+                    tabIndex={slideMode ? 0 : undefined}
+                    className={`preview-page-card ${slideMode ? `choose-slides-page-card ${isSelected ? 'selected' : ''}` : ''}`}
+                    onClick={slideMode ? toggleSlide : undefined}
+                    onKeyDown={slideMode ? (e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault()
+                        toggleSlide()
+                      }
+                    } : undefined}
+                  >
+                    <p className="preview-page-label">{page.label}</p>
+                    <div className={`preview-page-thumb ${slideMode ? 'choose-slides-thumb' : ''}`}>
+                      {slideMode && (
+                        <div className="choose-slides-checkbox" aria-hidden>
+                          {isSelected ? (
+                            <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                              <rect width="20" height="20" rx="4" fill="#8b3dff"/>
+                              <path d="M5 10l3 3 7-7" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                            </svg>
+                          ) : (
+                            <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                              <rect x="1" y="1" width="18" height="18" rx="4" fill="white" stroke="rgba(13, 13, 13, 0.2)" strokeWidth="2"/>
+                            </svg>
+                          )}
+                        </div>
+                      )}
+                      <img src={page.thumb} alt={page.label} />
+                    </div>
                   </div>
-                </div>
-              ))}
+                )
+              })}
             </div>
           </main>
           <footer className="preview-footer">
-            <button type="button" className="preview-remix-btn" onClick={() => handleRemixClick(previewItem)}>Edit with AI</button>
+            {EXP.slideSelectionInPreview && previewWithSlidePick ? (
+              <>
+                <button
+                  type="button"
+                  className="preview-remix-btn choose-slides-remix-btn"
+                  onClick={() => { setPreviewWithSlidePick(false); }}
+                >
+                  Done selecting ({selectedPageIds.size} slide{selectedPageIds.size !== 1 ? 's' : ''})
+                </button>
+                <button
+                  type="button"
+                  className="preview-remix-btn"
+                  onClick={() => {
+                    handleRemixClick(previewItem)
+                    setPreviewItem(null)
+                    setPreviewWithSlidePick(false)
+                  }}
+                >
+                  Edit with AI
+                </button>
+              </>
+            ) : (
+              <>
+                {EXP.slideSelectionInPreview && (
+                  <button type="button" className="preview-remix-btn choose-slides-remix-btn" onClick={() => setPreviewWithSlidePick(true)}>
+                    Select slides here
+                  </button>
+                )}
+                <button type="button" className="preview-remix-btn" onClick={() => handleRemixClick(previewItem)}>Edit with AI</button>
+              </>
+            )}
             <div className="preview-composer">
               <button type="button" className="preview-composer-icon" aria-label="Add">
                 <img src="/svg/Icon.svg" alt="" width={20} height={20} />
