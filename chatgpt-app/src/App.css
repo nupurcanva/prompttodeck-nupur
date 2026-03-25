@@ -177,6 +177,7 @@ html, body, #root {
 .conversation {
   width: 100%;
   max-width: 768px;
+  min-width: 0;
   display: flex;
   flex-direction: column;
   gap: 24px;
@@ -215,7 +216,11 @@ html, body, #root {
 
 /* ChatGPT follow-up message - plain text, left-aligned, no bubble, with utility icons */
 .chatgpt-follow-up {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
   align-self: flex-start;
+  gap: 8px;
   width: 100%;
   max-width: 768px;
 }
@@ -232,7 +237,8 @@ html, body, #root {
 .chatgpt-follow-up-actions {
   display: flex;
   align-items: center;
-  gap: 4px;
+  flex-wrap: wrap;
+  gap: 2px;
 }
 
 .chatgpt-follow-up-icon {
@@ -264,6 +270,128 @@ html, body, #root {
   flex-direction: column;
   gap: 12px;
   width: 100%;
+  max-width: 100%;
+  min-width: 0;
+}
+
+/* Stacked Canva widgets in thread (get started + flow + generating) */
+.canva-widget-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 40px;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+}
+
+.canva-thread-segment {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+}
+
+/* Frozen “previous” cards / summary — new widget loads underneath */
+.options-container--stacked-past {
+  pointer-events: none;
+  user-select: none;
+  opacity: 0.92;
+}
+
+.canva-widget-stack__prior {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+}
+
+.canva-stack-frozen-desc {
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.5;
+  color: rgba(13, 13, 13, 0.65);
+  letter-spacing: -0.14px;
+}
+
+/* Tool thread: actions row above loading (dot + text) or Canva widgets */
+.canva-tool-thread-block {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+}
+
+.canva-tool-thread-block .chatgpt-follow-up-actions {
+  margin-bottom: 0;
+}
+
+/* Phased loading: pulsing dot, grey status text below */
+.canva-secondary-loading-chat {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: flex-start;
+  align-self: stretch;
+  gap: 10px;
+  min-height: 36px;
+  padding: 2px 0 2px 2px;
+}
+
+.chatgpt-loading-dot {
+  display: block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #0d0d0d;
+  flex-shrink: 0;
+  animation: chatgpt-loading-dot-flicker 1s ease-in-out infinite;
+}
+
+.canva-secondary-loading-chat-message {
+  font-size: 16px;
+  line-height: 1.5;
+  letter-spacing: -0.16px;
+  font-weight: 400;
+  color: #a3a3a3;
+}
+
+/* Helper copy + six-icon row directly under loaded Canva widgets */
+.chatgpt-follow-up--post-widget {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  align-self: stretch;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  margin-top: 4px;
+}
+
+.chatgpt-follow-up--post-widget .chatgpt-follow-up-text {
+  margin-top: 0;
+}
+
+@keyframes chatgpt-loading-dot-flicker {
+  0%,
+  100% {
+    opacity: 0.25;
+    transform: scale(0.88);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .chatgpt-loading-dot {
+    animation: none;
+    opacity: 0.55;
+  }
 }
 
 .app-attribution {
@@ -370,6 +498,8 @@ html, body, #root {
   border-radius: 24px;
   box-shadow: 0px 6px 12px 0px rgba(0, 0, 0, 0.05);
   border: 0.5px solid rgba(13, 13, 13, 0.08);
+  max-width: 100%;
+  min-width: 0;
 }
 
 .section-title {
@@ -858,6 +988,10 @@ html, body, #root {
   gap: 12px;
 }
 
+.generate-from-scratch-header--title-only {
+  gap: 0;
+}
+
 .generate-widget-title {
   font-size: 20px;
   font-weight: 600;
@@ -907,11 +1041,414 @@ html, body, #root {
 
 .tone-pill svg:last-of-type {
   flex-shrink: 0;
-  opacity: 0.7;
+  opacity: 0.6;
 }
 
 .tone-pill-update {
   border-style: dashed;
+}
+
+/* Generate from scratch — Figma node 810-7916 (Guided presentation workflow) */
+.options-container--guided-scratch {
+  padding: 24px;
+}
+
+.generate-from-scratch-widget--guided {
+  gap: 20px;
+}
+
+.tone-pills--guided {
+  gap: 10px;
+}
+
+.tone-pill--guided {
+  gap: 8px;
+  padding: 8px 12px;
+  border: 1px solid #e5e5e5;
+  border-radius: 999px;
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: -0.16px;
+  color: #0d0d0d;
+  background: #fff;
+}
+
+.tone-pill--guided .tone-pill-icon {
+  flex-shrink: 0;
+  opacity: 0.72;
+  color: #5c5c5c;
+}
+
+.tone-pill--guided .tone-pill-chevron {
+  flex-shrink: 0;
+  opacity: 0.45;
+}
+
+.tone-pill--guided.active {
+  background: #0d0d0d;
+  border-color: #0d0d0d;
+  color: #fff;
+}
+
+.tone-pill--guided.active .tone-pill-icon {
+  opacity: 1;
+  color: #fff;
+}
+
+.tone-pill--guided.active .tone-pill-chevron {
+  opacity: 0.85;
+  color: #fff;
+}
+
+.tone-pill--guided.tone-pill-update {
+  border-style: dashed;
+  border-color: rgba(13, 13, 13, 0.22);
+}
+
+.tone-pill--guided.tone-pill-update .tone-pill-icon {
+  color: #5c5c5c;
+}
+
+.outline-items.outline-items--guided {
+  gap: 0;
+  margin-top: 2px;
+}
+
+.outline-item.outline-item--guided {
+  gap: 14px;
+  padding: 16px 0;
+  border-bottom: 1px solid #ebebeb;
+  align-items: flex-start;
+}
+
+.outline-item.outline-item--guided:first-child {
+  padding-top: 8px;
+}
+
+.outline-item.outline-item--guided:last-child {
+  border-bottom: none;
+  padding-bottom: 4px;
+}
+
+.outline-item-num.outline-item-num--guided {
+  width: 32px;
+  height: 32px;
+  min-width: 32px;
+  min-height: 32px;
+  border-radius: 8px;
+  background: #f0f0f0;
+  color: #0d0d0d;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: -0.14px;
+}
+
+.outline-item-title.outline-item-title--guided {
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: -0.16px;
+  margin: 0 0 6px;
+  line-height: 1.35;
+  color: #0d0d0d;
+}
+
+.outline-item-desc.outline-item-desc--guided {
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 1.45;
+  letter-spacing: -0.14px;
+  color: #666666;
+  margin: 0;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+}
+
+.generate-widget-footer.generate-widget-footer--guided {
+  padding-top: 18px;
+  margin-top: 2px;
+  border-top: 1px solid #ebebeb;
+}
+
+.more-pages--guided {
+  font-size: 14px;
+  font-weight: 500;
+  color: rgba(13, 13, 13, 0.55);
+  letter-spacing: -0.14px;
+}
+
+.generate-design-btn--guided {
+  background: #7d2ae8;
+  padding: 10px 22px;
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: -0.32px;
+}
+
+.generate-design-btn--guided:hover {
+  background: #6f26d1;
+}
+
+.generate-design-btn--guided:active {
+  background: #6321c2;
+}
+
+/* Shared small section label above pills and content preview */
+.outline-section-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: rgba(13, 13, 13, 0.55);
+  letter-spacing: -0.12px;
+  line-height: 1.5;
+  margin-bottom: -4px;
+}
+
+/* Non-scrollable outline content preview card in chat */
+.outline-content-preview {
+  position: relative;
+  border: 1px solid rgba(13, 13, 13, 0.12);
+  border-radius: 16px;
+  overflow: hidden;
+  cursor: pointer;
+  background: #fff;
+  transition: border-color 0.15s;
+}
+
+.outline-content-preview:hover {
+  border-color: rgba(13, 13, 13, 0.22);
+}
+
+.outline-content-preview-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 20px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+  flex-shrink: 0;
+}
+
+.outline-content-preview-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #000;
+  letter-spacing: -0.14px;
+}
+
+.outline-content-preview-open-btn {
+  background: none;
+  border: none;
+  font-size: 14px;
+  font-weight: 400;
+  color: #8e8ea0;
+  cursor: pointer;
+  padding: 0;
+  font-family: inherit;
+  transition: color 0.15s;
+}
+
+.outline-content-preview-open-btn:hover {
+  color: #0d0d0d;
+}
+
+.outline-content-preview-body {
+  padding: 16px 20px 20px;
+  height: 240px;
+  overflow: hidden;
+  position: relative;
+}
+
+.outline-content-preview-doc-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: #000;
+  letter-spacing: -0.4px;
+  margin: 0 0 10px;
+}
+
+.outline-content-preview-text {
+  font-size: 13px;
+  font-weight: 400;
+  font-family: "SF Pro", -apple-system, BlinkMacSystemFont, sans-serif;
+  line-height: 1.65;
+  color: #0d0d0d;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  margin: 0;
+}
+
+.outline-preview-fade {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 72px;
+  background: linear-gradient(to top, rgba(255, 255, 255, 1) 0%, rgba(255, 255, 255, 0) 100%);
+  pointer-events: none;
+}
+
+/* Create from existing — tone-pill trigger + popover with tabs + template rows */
+.create-existing-select-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: rgba(13, 13, 13, 0.55);
+  letter-spacing: -0.12px;
+}
+
+.create-existing-picker {
+  position: relative;
+  flex: 1;
+  min-width: 120px;
+  display: flex;
+}
+
+/* Full-width variant used in create-from-existing widget (no tone pills alongside) */
+.create-existing-picker--full {
+  width: 100%;
+  flex: none;
+}
+
+.create-existing-picker-trigger {
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  justify-content: flex-start;
+  gap: 8px;
+  text-align: left;
+  flex: 1;
+}
+
+.create-existing-picker-trigger-label {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.create-existing-picker-chevron {
+  flex-shrink: 0;
+  margin-left: auto;
+  opacity: 0.7;
+}
+
+.create-existing-picker-panel {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 8px);
+  z-index: 40;
+  box-sizing: border-box;
+  padding: 12px;
+  background: #fff;
+  border: 1px solid rgba(13, 13, 13, 0.12);
+  border-radius: 12px;
+  box-shadow:
+    0 12px 32px rgba(0, 0, 0, 0.12),
+    0 2px 8px rgba(0, 0, 0, 0.06);
+  max-height: min(420px, 66vh);
+  display: flex;
+  flex-direction: column;
+  min-width: 380px;
+  width: max-content;
+}
+
+/* Full-width panel stretches to fill the picker container */
+.create-existing-picker-panel--full {
+  left: 0;
+  right: 0;
+  width: auto;
+  min-width: 0;
+}
+
+/* Search bar inside the picker panel */
+.picker-search-bar {
+  margin: 10px 0 4px;
+  flex-shrink: 0;
+}
+
+.picker-search-clear {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  background: transparent;
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  color: rgba(13, 13, 13, 0.4);
+  flex-shrink: 0;
+  padding: 0;
+  transition: color 0.15s, background 0.15s;
+}
+
+.picker-search-clear:hover {
+  color: #0d0d0d;
+  background: rgba(13, 13, 13, 0.06);
+}
+
+/* Row layout for hover actions */
+.template-item-actions-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+/* Wrapper gives the thumb a stacking context for the badge overlay */
+.template-thumb-wrap {
+  position: relative;
+  flex-shrink: 0;
+  width: 64px;
+  height: 64px;
+}
+
+.template-thumb-wrap .template-thumb {
+  width: 100%;
+  height: 100%;
+}
+
+/* Filled purple circle with white checkmark at top-left of thumbnail */
+.picker-thumb-selected-badge {
+  position: absolute;
+  top: 5px;
+  left: 5px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #8b3dff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2;
+  pointer-events: none;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+.picker-no-results {
+  padding: 16px 12px;
+  font-size: 14px;
+  color: #848484;
+  text-align: center;
+  margin: 0;
+}
+
+.create-existing-picker-tabs.segmented-control {
+  flex-shrink: 0;
+}
+
+.create-existing-picker-list {
+  flex: 1;
+  min-height: 0;
+  overflow-x: auto;
+  overflow-y: auto;
+  margin-top: 12px;
+  padding-right: 2px;
+}
+
+.template-item-selected {
+  background: rgba(139, 61, 255, 0.08);
+  box-shadow: inset 0 0 0 1px rgba(139, 61, 255, 0.25);
 }
 
 .outline-items {
@@ -977,6 +1514,12 @@ html, body, #root {
   font-weight: 500;
   color: rgba(13, 13, 13, 0.6);
   letter-spacing: -0.14px;
+}
+
+.generate-widget-footer--cta-only {
+  justify-content: flex-end;
+  border-top: none;
+  padding-top: 16px;
 }
 
 .generate-design-btn {
@@ -1298,6 +1841,8 @@ html, body, #root {
   flex-direction: column;
   gap: 16px;
   width: 100%;
+  max-width: 100%;
+  min-width: 0;
 }
 
 .generating-preview-area {
@@ -1400,6 +1945,9 @@ html, body, #root {
   overflow-x: auto;
   padding-bottom: 4px;
   -webkit-overflow-scrolling: touch;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
 }
 
 .generating-slides-row::-webkit-scrollbar {
@@ -1910,6 +2458,132 @@ html, body, #root {
   flex-shrink: 0;
 }
 
+/* Canva attribution header inside secondary widgets */
+.canva-widget-with-header {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+}
+
+/* Live generation banner above the thumbnail */
+.generating-live-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 14px;
+  background: rgba(139, 61, 255, 0.05);
+  border: 1px solid rgba(139, 61, 255, 0.15);
+  border-radius: 12px;
+}
+
+.generating-live-banner-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  flex: 1;
+}
+
+.generating-live-dot {
+  display: block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #8b3dff;
+  flex-shrink: 0;
+  animation: chatgpt-loading-dot-flicker 1.4s ease-in-out infinite;
+}
+
+.generating-live-text {
+  font-size: 13px;
+  font-weight: 400;
+  color: rgba(13, 13, 13, 0.75);
+  letter-spacing: -0.13px;
+  line-height: 1.5;
+}
+
+.generating-open-canva-btn--banner {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 14px;
+  background: #8b3dff;
+  color: #fff;
+  border: none;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 500;
+  font-family: inherit;
+  cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: background 0.15s;
+}
+
+.generating-open-canva-btn--banner:hover {
+  background: #7a2eeb;
+}
+
+.generating-open-canva-btn--banner svg {
+  flex-shrink: 0;
+}
+
+/* Inline link inside follow-up helper (same color as body text) */
+.chatgpt-follow-up-inline-link {
+  color: inherit;
+  font-weight: 500;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.chatgpt-follow-up-inline-link:hover {
+  color: #0d0d0d;
+}
+
+/* Empty state for brand template tab */
+.picker-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 28px 20px 20px;
+  gap: 8px;
+}
+
+.picker-empty-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: #0d0d0d;
+  margin: 4px 0 0;
+  letter-spacing: -0.15px;
+}
+
+.picker-empty-desc {
+  font-size: 13px;
+  color: #848484;
+  margin: 0;
+  line-height: 1.5;
+  max-width: 280px;
+}
+
+.picker-empty-link {
+  display: inline-block;
+  margin-top: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  color: #8b3dff;
+  text-decoration: none;
+  letter-spacing: -0.13px;
+}
+
+.picker-empty-link:hover {
+  text-decoration: underline;
+}
+
 /* Next screen overlay */
 .next-screen-overlay {
   position: fixed;
@@ -1955,121 +2629,4 @@ html, body, #root {
 
 .next-screen-message button:hover {
   opacity: 0.9;
-}
-
-/* --- UX experimentation branch (see experimentFlow.js) --- */
-.experiment-flow-label {
-  font-size: 13px;
-  line-height: 1.45;
-  color: #5d5d5d;
-  margin: 0 0 16px;
-  padding: 10px 12px;
-  background: rgba(139, 61, 255, 0.06);
-  border-radius: 10px;
-  border-left: 3px solid #8b3dff;
-}
-
-.create-from-existing.experiment-flat .create-from-existing-header {
-  margin-bottom: 8px;
-}
-
-.early-design-hero {
-  display: flex;
-  gap: 16px;
-  align-items: flex-start;
-  padding: 16px;
-  margin-bottom: 16px;
-  background: #fafafa;
-  border: 1px solid rgba(13, 13, 13, 0.08);
-  border-radius: 12px;
-}
-
-.early-design-hero-thumb {
-  width: 96px;
-  height: 96px;
-  flex-shrink: 0;
-  border-radius: 8px;
-  overflow: hidden;
-  background: #e8e8e8;
-}
-
-.early-design-hero-thumb img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.early-design-hero-label {
-  font-size: 11px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  color: #8e8ea0;
-  margin: 0 0 4px;
-}
-
-.early-design-hero-name {
-  font-size: 17px;
-  font-weight: 600;
-  color: #0d0d0d;
-  margin: 0 0 4px;
-  line-height: 1.3;
-}
-
-.early-design-hero-type {
-  font-size: 13px;
-  color: #848484;
-  margin: 0 0 10px;
-}
-
-.early-design-hero-change {
-  background: none;
-  border: none;
-  padding: 0;
-  font-size: 14px;
-  font-weight: 500;
-  color: #8b3dff;
-  cursor: pointer;
-  font-family: inherit;
-}
-
-.early-design-hero-change:hover {
-  text-decoration: underline;
-}
-
-.search-secondary-heading {
-  font-size: 14px;
-  font-weight: 500;
-  color: #5d5d5d;
-  margin: 0 0 10px;
-}
-
-.unified-section-title {
-  font-size: 15px;
-  font-weight: 600;
-  color: #0d0d0d;
-  margin: 20px 0 10px;
-  letter-spacing: -0.2px;
-}
-
-.unified-section-title:first-of-type {
-  margin-top: 8px;
-}
-
-.experiment-auto-slide-note {
-  font-size: 12px;
-  line-height: 1.4;
-  color: #5d5d5d;
-  margin: 8px 0 0;
-  max-width: 420px;
-}
-
-.experiment-preview-slide-hint {
-  font-size: 14px;
-  color: #5d5d5d;
-  margin: 0 0 16px;
-  max-width: 720px;
-  margin-left: auto;
-  margin-right: auto;
-  text-align: center;
 }

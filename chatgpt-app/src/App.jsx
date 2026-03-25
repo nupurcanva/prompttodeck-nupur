@@ -1,6 +1,5 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef, useLayoutEffect } from 'react'
 import './App.css'
-import { EXP, searchPrefillFromPrompt } from './experimentFlow.js'
 
 function App() {
   const [prompt, setPrompt] = useState('')
@@ -9,11 +8,25 @@ function App() {
   const DECK_PROMPT = "Create a pitch deck for Deploy 2026" // From Figma - prompt that generated the outline
   const [screen, setScreen] = useState('home') // 'home' | 'next' - ready for next screen
   const [flowStep, setFlowStep] = useState('outline') // 'outline' | 'options' | 'create-from-existing'
-  const [widgetStep, setWidgetStep] = useState('options') // 'options' | 'create-from-existing' | 'generate-from-scratch' | 'generating'
+  const [widgetStep, setWidgetStep] = useState('options') // 'options' | 'create-from-existing' | 'generate-from-scratch' | 'generating' | 'remix'
   const [loadedSlideCount, setLoadedSlideCount] = useState(0) // slides loaded in generating view
   const [mainPreviewUnblurred, setMainPreviewUnblurred] = useState(false)
   const [visiblePageSlotsCount, setVisiblePageSlotsCount] = useState(0) // page slots shown below (loading states)
-  const [preSelectedDesign, setPreSelectedDesign] = useState(null) // when user says "use template X"
+  const [preSelectedDesign, setPreSelectedDesign] = useState(null) // legacy / outline navigation
+  const [createExistingItem, setCreateExistingItem] = useState(null) // selected template or design in create-from-existing flow
+  const [createExistingPickerOpen, setCreateExistingPickerOpen] = useState(false)
+  const createExistingPickerRef = useRef(null)
+  const chatScrollRef = useRef(null)
+  const canvaLatestSegmentRef = useRef(null)
+  const [pickerSearchQuery, setPickerSearchQuery] = useState('')
+  const [secondaryPanelLoading, setSecondaryPanelLoading] = useState(false)
+  const [secondaryLoadPhaseIndex, setSecondaryLoadPhaseIndex] = useState(0)
+  const secondaryLoadTimerRef = useRef(null)
+  const SECONDARY_LOAD_MESSAGES = ['Calling the tool', 'Called the tool', 'Talked to canva']
+  /** ~2.5s total before widget + Canva header appear (three phased lines). */
+  const SECONDARY_LOAD_PHASE_MS = 850
+  const SECONDARY_PANEL_LOAD_MS = SECONDARY_LOAD_PHASE_MS * SECONDARY_LOAD_MESSAGES.length
+  const [canvaThread, setCanvaThread] = useState([]) // { id, type: 'chooser' | 'widget', variant?, cfeSnapshot?, outlineToneSnap?, remixSnap? }
   const [createTab, setCreateTab] = useState('brand-template') // 'brand-template' | 'your-designs' | 'search'
   const SHOW_SEARCH_BY_URL_TAB = false // Set to true to restore Search by URL tab
   const [searchQuery, setSearchQuery] = useState('')
@@ -21,74 +34,38 @@ function App() {
   const [searchByNameNoMatch, setSearchByNameNoMatch] = useState(false) // user asked for design by name, 0 results
   const [urlSearchQuery, setUrlSearchQuery] = useState('')
   const [previewItem, setPreviewItem] = useState(null)
+  const [previewFromPicker, setPreviewFromPicker] = useState(false)
+  const [noUserBrandTemplates, setNoUserBrandTemplates] = useState(false)
   const [remixItem, setRemixItem] = useState(null) // design selected for Edit with AI
   const [chooseSlidesItem, setChooseSlidesItem] = useState(null) // design for choose-slides fullscreen
   const [selectedPageIds, setSelectedPageIds] = useState(new Set()) // page IDs selected in choose-slides
   const [editDocumentFullscreenOpen, setEditDocumentFullscreenOpen] = useState(false)
-  const [previewWithSlidePick, setPreviewWithSlidePick] = useState(false)
   const USE_INLINE_EDIT_DOCUMENT = false // Set true to restore inline Enhance flow
-  const [remixContent, setRemixContent] = useState(`1. Cover — Deploy 2026
-Opening slide with event branding, date, and venue. Establish the Deploy 2026 identity.
+  const [remixContent, setRemixContent] = useState(`Deploy 2026 — Pitch Deck
 
-• Event logo and tagline
-• Date and location
-• Presenter name and title
+Cover
+Opening slide with event branding, date, and venue. Establish the Deploy 2026 identity and set the tone for the entire presentation. Event logo and tagline, date and location, presenter name and title.
 
-2. Agenda — Key topics overview
-Outline the main themes so the audience knows what to expect.
+Agenda
+Outline the main themes so the audience knows what to expect and can follow along. Problem statement and market context, solution and product overview, product demo and key features, team traction and ask.
 
-• Problem statement and market context
-• Solution and product overview
-• Product demo and key features
-• Team, traction, and ask
+Problem — Market opportunity
+Address the challenges and gaps in the current landscape. Articulate the pain points your target audience faces and the market opportunity that exists. Current state and pain points, market size and growth potential, why now — timing and trends, competitive landscape gaps.
 
-3. Problem — Market opportunity
-Address the challenges and gaps in the current landscape.
+Solution — Product overview
+Introduce your offering and how it solves the identified problems. Position your solution clearly and differentiate from alternatives. Product vision and value proposition, core capabilities and benefits, target customer and use cases, key differentiators.
 
-• Current state and pain points
-• Market size and growth potential
-• Why now? Timing and trends
-• Competitive landscape gaps
+Product demo — Key features
+Walk through the most important capabilities and differentiators. Show, don't tell — demonstrate how the product works in practice. Feature highlights with screenshots or mockups, user flow and key workflows, integration and ecosystem, roadmap preview.
 
-4. Solution — Product overview
-Introduce your offering and how it solves the identified problems.
+Team — Leadership & expertise
+Highlight the people behind the vision and their relevant experience. Build trust and credibility through the team's track record. Founder and key leadership bios, relevant experience and achievements, advisors and board, why this team can execute.
 
-• Product vision and value proposition
-• Core capabilities and benefits
-• Target customer and use cases
-• Key differentiators
+Traction — Metrics & milestones
+Share progress, validation, and proof points to build credibility. Use concrete numbers and milestones to demonstrate momentum. Key metrics — users, revenue, growth. Customer logos and testimonials, partnerships and milestones, recognition and awards.
 
-5. Product demo — Key features
-Walk through the most important capabilities. Show, don't tell.
-
-• Feature highlights with screenshots or mockups
-• User flow and key workflows
-• Integration and ecosystem
-• Roadmap preview
-
-6. Team — Leadership & expertise
-Highlight the people behind the vision and their relevant experience.
-
-• Founder and key leadership bios
-• Relevant experience and achievements
-• Advisors and board
-• Why this team can execute
-
-7. Traction — Metrics & milestones
-Share progress, validation, and proof points to build credibility.
-
-• Key metrics (users, revenue, growth)
-• Customer logos and testimonials
-• Partnerships and milestones
-• Recognition and awards
-
-8. Ask — Next steps & call to action
-Clear recommendations and what you need from the audience.
-
-• Funding amount and use of funds (if applicable)
-• Partnership or pilot opportunities
-• Next meeting or follow-up
-• Contact information`)
+Ask — Next steps & call to action
+Clear recommendations and what you need from the audience. Make the ask specific, actionable, and easy to say yes to. Funding amount and use of funds if applicable, partnership or pilot opportunities, next meeting or follow-up, contact information.`)
 
   // Clear search only when user clicks a tab (not when we navigate from prompt)
   const handleTabClick = (tab) => {
@@ -98,7 +75,7 @@ Clear recommendations and what you need from the audience.
     setCreateTab(tab)
   }
   const [urlSearchResult, setUrlSearchResult] = useState(null)
-  const [outlineTone, setOutlineTone] = useState('professional') // 'professional' | 'balanced' | 'playful'
+  const [outlineTone, setOutlineTone] = useState(null) // 'casual' | 'balanced' | 'playful' | null = none selected
 
   // Outline built out for Generate from scratch - matches Figma node 810-7610
   const generateFromScratchOutline = [
@@ -164,11 +141,16 @@ Clear recommendations and what you need from the audience.
     const templateMatch =
       text.match(/\bbrand\s+template\s+(?:called|named)?\s*['"]?([^'",.!?\s]+(?:\s+[^'",.!?\s]+)*)['"]?/i) ||
       text.match(/use\s+(?:my\s+)?(?:the\s+)?(?:brand\s+)?(?:template|design)\s+(?:called|named)?\s*['"]?([^'",.!?\s]+(?:\s+[^'",.!?\s]+)*)['"]?/i) ||
-      text.match(/(?:with|using)\s+(?:my\s+)?(?:brand\s+)?(?:template|design)\s+([^.,!?]+)/i) ||
+      text.match(/(?:with|using|from)\s+(?:my\s+)?(?:brand\s+)?(?:template|design)\s+([^.,!?]+)/i) ||
       text.match(/(?:brand\s+)?template\s+(?:called|named)?\s*['"]?([^'",.!?\s]+(?:\s+[^'",.!?\s]+)*)['"]?/i) ||
       text.match(/(?:my\s+)?design\s+(?:called|named)?\s*['"]?([^'",.!?\s]+(?:\s+[^'",.!?\s]+)*)['"]?/i) ||
-      text.match(/generate\s+(?:a\s+)?(?:design\s+)?using\s+(?:my\s+)?(?:brand\s+)?(?:template|design)\s+([^.,!?]+)/i)
-    const explicitName = templateMatch ? templateMatch[1].trim() : null
+      text.match(/generate\s+(?:a\s+)?(?:design\s+)?using\s+(?:my\s+)?(?:brand\s+)?(?:template|design)\s+([^.,!?]+)/i) ||
+      text.match(/\b(?:create|make|build|generate)\s+(?:a\s+)?(?:presentation|deck|slides?)\s+(?:with|using|from)\s+my\s+design\s+([^.,!?]+)/i)
+    let explicitName = templateMatch ? templateMatch[1].trim() : null
+    if (!explicitName && /\bmy\s+design\b/i.test(text)) {
+      const tail = text.match(/\bmy\s+design\s+(?:called|named)?\s*['"]?([^'".,;!?]+?)(?=\s*[.,;!?]|$)/i)
+      if (tail) explicitName = tail[1].trim()
+    }
 
     if (explicitName) {
       foundDesign = allDesigns.find(t => t.name.toLowerCase().includes(explicitName.toLowerCase()))
@@ -194,7 +176,14 @@ Clear recommendations and what you need from the audience.
       foundDesign = brandTemplates.find(t => /openai\s*gko/i.test(t.name))
       foundInBrandTemplates = !!foundDesign
     }
-    return { foundDesign, foundInBrandTemplates, explicitName, askedForBrandTemplate, askedForDesign }
+    const intentUserDesign =
+      askedForDesign &&
+      !askedForBrandTemplate &&
+      !/\bbrand\s*template\b/i.test(textLower) &&
+      (/\bmy\s+design\b/.test(textLower) ||
+        /\bexisting\s+design\b/.test(textLower) ||
+        /\b(use|using|with|from)\s+(?:my\s+)?design\b/.test(textLower))
+    return { foundDesign, foundInBrandTemplates, explicitName, askedForBrandTemplate, askedForDesign, intentUserDesign }
   }
 
   const handleTemplateSearch = (e) => {
@@ -260,27 +249,133 @@ Clear recommendations and what you need from the audience.
     ? (yourDesigns.some(d => d.id === preSelectedDesign.id) ? 1 : 0)
     : (isSearching ? yourDesignsSearchCount : yourDesigns.length)
 
-  const navigateToTemplateDesign = (text, { foundDesign, foundInBrandTemplates, explicitName, askedForBrandTemplate, askedForDesign }) => {
+  const clearSecondaryLoadTimer = () => {
+    if (secondaryLoadTimerRef.current != null) {
+      clearTimeout(secondaryLoadTimerRef.current)
+      secondaryLoadTimerRef.current = null
+    }
+  }
+
+  const newCanvaThreadId = () => `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`
+
+  const snapshotPreviousTailWidget = (thread) => {
+    const idx = [...thread].map((e, i) => (e.type === 'widget' ? i : -1)).filter((i) => i >= 0).pop()
+    if (idx == null) return thread
+    const w = thread[idx]
+    if (w.frozen) return thread
+    const next = [...thread]
+    const enriched = { ...w, frozen: true }
+    if (w.variant === 'create-from-existing' && createExistingItem) {
+      enriched.cfeSnapshot = { ...createExistingItem }
+    }
+    if (w.variant === 'generate-from-scratch') {
+      enriched.outlineToneSnap = outlineTone
+    }
+    if (w.variant === 'remix' && remixItem) {
+      enriched.remixSnap = {
+        id: remixItem.id,
+        name: remixItem.name,
+        thumb: remixItem.thumb,
+        type: remixItem.type,
+      }
+    }
+    next[idx] = enriched
+    return next
+  }
+
+  const runAfterSecondaryLoad = (applySecondaryWidget, { clearRemix = true } = {}) => {
+    clearSecondaryLoadTimer()
+    if (clearRemix) setRemixItem(null)
+    setSecondaryPanelLoading(true)
+    secondaryLoadTimerRef.current = window.setTimeout(() => {
+      secondaryLoadTimerRef.current = null
+      applySecondaryWidget()
+      setSecondaryPanelLoading(false)
+    }, SECONDARY_PANEL_LOAD_MS)
+  }
+
+  useEffect(() => () => clearSecondaryLoadTimer(), [])
+
+  useEffect(() => {
+    if (flowStep === 'outline') {
+      setCanvaThread([])
+      setSecondaryPanelLoading(false)
+      setRemixItem(null)
+    }
+  }, [flowStep])
+
+  useEffect(() => {
+    const widgets = canvaThread.filter((e) => e.type === 'widget')
+    const tail = widgets[widgets.length - 1]
+    if (!tail) {
+      if (canvaThread.some((e) => e.type === 'chooser')) setWidgetStep('options')
+      return
+    }
+    if (tail.variant === 'generate-from-scratch') setWidgetStep('generate-from-scratch')
+    else if (tail.variant === 'create-from-existing') setWidgetStep('create-from-existing')
+    else if (tail.variant === 'generating') setWidgetStep('generating')
+    else if (tail.variant === 'remix') setWidgetStep('remix')
+  }, [canvaThread])
+
+  useEffect(() => {
+    if (!secondaryPanelLoading) {
+      setSecondaryLoadPhaseIndex(0)
+      return
+    }
+    setSecondaryLoadPhaseIndex(0)
+    const t1 = window.setTimeout(() => setSecondaryLoadPhaseIndex(1), SECONDARY_LOAD_PHASE_MS)
+    const t2 = window.setTimeout(() => setSecondaryLoadPhaseIndex(2), SECONDARY_LOAD_PHASE_MS * 2)
+    return () => {
+      clearTimeout(t1)
+      clearTimeout(t2)
+    }
+  }, [secondaryPanelLoading])
+
+  const navigateToTemplateDesign = (text, { foundDesign, foundInBrandTemplates, explicitName, askedForBrandTemplate, askedForDesign, intentUserDesign }) => {
     const mentionedBrandTemplate = /\bbrand\s*template\b/i.test(text)
+    // Detect "my design" use-case: user referenced a design (not a brand template)
+    const isMyDesignPrompt = askedForDesign && !askedForBrandTemplate && !mentionedBrandTemplate
+    setNoUserBrandTemplates(isMyDesignPrompt)
     // When user said "brand template X" but we found a design in your-designs (e.g. "Brand Guidelines"), respect intent: show brand-template tab with search
     const preferBrandTemplateSearch = explicitName && mentionedBrandTemplate && foundDesign && !foundInBrandTemplates
     if (foundDesign && !preferBrandTemplateSearch) {
-      setPreSelectedDesign(foundDesign)
-      setWidgetStep('create-from-existing')
-      setFlowStep('create-from-existing')
-      setCreateTab(foundInBrandTemplates ? 'brand-template' : 'your-designs')
-    } else if (explicitName || preferBrandTemplateSearch) {
       setPreSelectedDesign(null)
-      setWidgetStep('create-from-existing')
       setFlowStep('create-from-existing')
-      setCreateTab(mentionedBrandTemplate || askedForBrandTemplate ? 'brand-template' : 'your-designs')
-      setSearchQuery(explicitName)
-      setSearchSubmitted(true)
-      setSearchByNameNoMatch(true)
+      setCanvaThread([])
+      runAfterSecondaryLoad(() => {
+        setCreateExistingItem(foundDesign)
+        setWidgetStep('create-from-existing')
+        setCanvaThread([{ id: newCanvaThreadId(), type: 'widget', variant: 'create-from-existing' }])
+        // If no brand templates, force to your-designs tab
+        setCreateTab(isMyDesignPrompt ? 'your-designs' : (foundInBrandTemplates ? 'brand-template' : 'your-designs'))
+      }, { clearRemix: false })
+    } else if (explicitName || preferBrandTemplateSearch || intentUserDesign) {
+      const matchByName = explicitName
+        ? allItems.find((t) => t.name.toLowerCase().includes(explicitName.toLowerCase()))
+        : null
+      setPreSelectedDesign(null)
+      setFlowStep('create-from-existing')
+      setSearchQuery('')
+      setSearchSubmitted(false)
+      setSearchByNameNoMatch(false)
+      setCanvaThread([])
+      runAfterSecondaryLoad(() => {
+        setCreateExistingItem(foundDesign || matchByName || (isMyDesignPrompt || intentUserDesign ? yourDesigns[0] : brandTemplates[0]))
+        setWidgetStep('create-from-existing')
+        setCanvaThread([{ id: newCanvaThreadId(), type: 'widget', variant: 'create-from-existing' }])
+        setCreateTab(isMyDesignPrompt || intentUserDesign ? 'your-designs' : (mentionedBrandTemplate || askedForBrandTemplate ? 'brand-template' : 'your-designs'))
+        if (explicitName && !foundDesign && !matchByName && (isMyDesignPrompt || intentUserDesign)) {
+          setSearchQuery(explicitName)
+          setSearchSubmitted(true)
+        }
+      }, { clearRemix: false })
     } else {
       setPreSelectedDesign(null)
       setFlowStep('options')
-      setWidgetStep('options')
+      setCanvaThread([])
+      runAfterSecondaryLoad(() => {
+        setCanvaThread([{ id: newCanvaThreadId(), type: 'chooser' }])
+      })
     }
   }
 
@@ -300,7 +395,7 @@ Clear recommendations and what you need from the audience.
     if (!text) return
     setSubmittedPrompt(text)
     const result = processTemplateDesignPrompt(text)
-    if (result.foundDesign || result.explicitName) {
+    if (result.foundDesign || result.explicitName || result.intentUserDesign) {
       navigateToTemplateDesign(text, result)
     } else {
       setScreen('next')
@@ -322,25 +417,39 @@ Clear recommendations and what you need from the audience.
     }
   }
 
+  const popRemixWidgetFromThread = () => {
+    setRemixItem(null)
+    setEditDocumentFullscreenOpen(false)
+    setCanvaThread((t) => {
+      const idxs = t.map((e, i) => (e.type === 'widget' && e.variant === 'remix' ? i : -1)).filter((i) => i >= 0)
+      const i = idxs[idxs.length - 1]
+      if (i == null) return t
+      return t.slice(0, i).concat(t.slice(i + 1))
+    })
+  }
+
   const handleRemixClick = (item) => {
     setRemixItem(item)
     setPreviewItem(null)
-    setPreviewWithSlidePick(false)
-    if (EXP.autoSelectSlidesOverride && item?.pages?.length) {
-      const pages = item.pages
-      const take = Math.min(pages.length, Math.max(6, Math.ceil(pages.length * 0.7)))
-      setSelectedPageIds(new Set(pages.slice(0, take).map((p) => p.id)))
-    }
+    runAfterSecondaryLoad(() => {
+      setCanvaThread((t) => {
+        const withSnap = snapshotPreviousTailWidget(t)
+        return [...withSnap, { id: newCanvaThreadId(), type: 'widget', variant: 'remix' }]
+      })
+    }, { clearRemix: false })
   }
 
   const handleGenerateDesign = () => {
+    clearSecondaryLoadTimer()
     setLoadedSlideCount(0)
     setMainPreviewUnblurred(false)
     setVisiblePageSlotsCount(0)
-    setWidgetStep('generating')
+    runAfterSecondaryLoad(() => {
+      setCanvaThread((t) => [...t, { id: newCanvaThreadId(), type: 'widget', variant: 'generating' }])
+    }, { clearRemix: false })
   }
 
-  const generatingPages = remixItem?.pages || createPages()
+  const generatingPages = remixItem?.pages || createExistingItem?.pages || createPages()
 
   useEffect(() => {
     if (widgetStep !== 'generating') return
@@ -399,39 +508,6 @@ Clear recommendations and what you need from the audience.
     }
   }, [widgetStep, generatingPages.length])
 
-  // Experiment: first entry — default-selected template + search prefill (once per session)
-  useEffect(() => {
-    if (!EXP.defaultSelectedFirstEntry && !EXP.prefillSearchFromPrompt) return
-    if (widgetStep !== 'create-from-existing' || flowStep !== 'create-from-existing') return
-    try {
-      if (sessionStorage.getItem('exp-create-bootstrapped')) return
-      sessionStorage.setItem('exp-create-bootstrapped', '1')
-    } catch (_) {
-      return
-    }
-    setPreSelectedDesign((prev) => {
-      if (prev) return prev
-      if (!EXP.defaultSelectedFirstEntry) return prev
-      if (searchSubmitted && searchQuery.trim()) return prev
-      return brandTemplates[0]
-    })
-    setSearchQuery((prevQ) => {
-      if (!EXP.prefillSearchFromPrompt) return prevQ
-      if (prevQ.trim()) return prevQ
-      const src = submittedPrompt || DECK_PROMPT
-      const q = searchPrefillFromPrompt(src)
-      return q || prevQ
-    })
-  }, [widgetStep, flowStep, submittedPrompt, searchSubmitted, searchQuery])
-
-  // When opening preview from browse (not remix adjust), default all slides selected for slide-pick UX
-  useEffect(() => {
-    if (!previewItem || !EXP.slideSelectionInPreview) return
-    if (remixItem && previewItem.id === remixItem.id) return
-    const pages = previewItem.pages || createPages()
-    setSelectedPageIds(new Set(pages.map((p) => p.id)))
-  }, [previewItem?.id, remixItem?.id])
-
   // Sync generating state to localStorage so Canva editor can pick it up when opened
   useEffect(() => {
     if (widgetStep === 'generating' && generatingPages.length > 0) {
@@ -446,43 +522,369 @@ Clear recommendations and what you need from the audience.
     }
   }, [widgetStep, generatingPages, loadedSlideCount, mainPreviewUnblurred, visiblePageSlotsCount])
 
-  const ChatGptFollowUp = ({ text }) => (
-    <div className="chatgpt-follow-up">
-      <p className="chatgpt-follow-up-text">{text}</p>
-      <div className="chatgpt-follow-up-actions">
-        <button type="button" className="chatgpt-follow-up-icon" aria-label="Copy">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
-        </button>
-        <button type="button" className="chatgpt-follow-up-icon" aria-label="Thumbs up">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"/></svg>
-        </button>
-        <button type="button" className="chatgpt-follow-up-icon" aria-label="Thumbs down">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M10 15v4a3 3 0 0 0 3 3l4-9V2H5.72a2 2 0 0 0-2 1.7l-1.38 9a2 2 0 0 0 2 2.3zm7-13h3a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2h-3"/></svg>
-        </button>
-        <button type="button" className="chatgpt-follow-up-icon" aria-label="More">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="1.5"/><circle cx="6" cy="12" r="1.5"/><circle cx="18" cy="12" r="1.5"/></svg>
-        </button>
-      </div>
+  useEffect(() => {
+    if (widgetStep !== 'create-from-existing' && widgetStep !== 'remix') setCreateExistingPickerOpen(false)
+  }, [widgetStep])
+
+  useEffect(() => {
+    if (!createExistingPickerOpen) setPickerSearchQuery('')
+  }, [createExistingPickerOpen])
+
+  useEffect(() => {
+    if (!createExistingPickerOpen) return
+    const onPointerDown = (e) => {
+      if (createExistingPickerRef.current && !createExistingPickerRef.current.contains(e.target)) {
+        setCreateExistingPickerOpen(false)
+      }
+    }
+    const onKey = (e) => {
+      if (e.key === 'Escape') setCreateExistingPickerOpen(false)
+    }
+    document.addEventListener('mousedown', onPointerDown)
+    document.addEventListener('keydown', onKey)
+    return () => {
+      document.removeEventListener('mousedown', onPointerDown)
+      document.removeEventListener('keydown', onKey)
+    }
+  }, [createExistingPickerOpen])
+
+  const FollowUpActions = () => (
+    <div className="chatgpt-follow-up-actions">
+      <button type="button" className="chatgpt-follow-up-icon" aria-label="Copy">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+      </button>
+      <button type="button" className="chatgpt-follow-up-icon" aria-label="Thumbs up">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"/></svg>
+      </button>
+      <button type="button" className="chatgpt-follow-up-icon" aria-label="Thumbs down">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M10 15v4a3 3 0 0 0 3 3l4-9V2H5.72a2 2 0 0 0-2 1.7l-1.38 9a2 2 0 0 0 2 2.3zm7-13h3a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2h-3"/></svg>
+      </button>
+      <button type="button" className="chatgpt-follow-up-icon" aria-label="Share">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>
+      </button>
+      <button type="button" className="chatgpt-follow-up-icon" aria-label="Regenerate">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+      </button>
+      <button type="button" className="chatgpt-follow-up-icon" aria-label="More">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="5" cy="12" r="1.25"/><circle cx="12" cy="12" r="1.25"/><circle cx="19" cy="12" r="1.25"/></svg>
+      </button>
     </div>
   )
 
-  const TemplateItem = ({ item, onPreview, onRemix }) => (
-    <div className="template-item">
-      <div className="template-item-main">
-        <div className={`template-thumb ${item.thumb ? '' : 'template-thumb-blank'}`}>
-          {item.thumb ? <img src={item.thumb} alt="" /> : null}
-        </div>
-        <div className="template-info">
-          <p className="template-name">{item.name}</p>
-          <p className="template-type">{item.type}</p>
-        </div>
-      </div>
-      <div className="template-item-actions" onClick={(e) => e.stopPropagation()}>
-        <button type="button" className="template-action-btn template-action-preview" onClick={() => onPreview?.(item)}>Preview</button>
-        <button type="button" className="template-action-btn template-action-remix" onClick={() => onRemix?.(item)}>Edit with AI</button>
-      </div>
+  const ChatGptFollowUp = ({ text }) => (
+    <div className="chatgpt-follow-up">
+      <p className="chatgpt-follow-up-text">{text}</p>
+      <FollowUpActions />
     </div>
   )
+
+  const widgetEntries = canvaThread.filter((e) => e.type === 'widget')
+  const lastWidgetEntry = widgetEntries[widgetEntries.length - 1]
+  const lastWidgetId = lastWidgetEntry?.id
+  const hasChooserInThread = canvaThread.some((e) => e.type === 'chooser')
+  const chooserInteractive = hasChooserInThread && !secondaryPanelLoading && !remixItem
+  const tailVariant = lastWidgetEntry?.variant
+
+  const canvaFollowUpHelperText =
+    tailVariant === 'generating'
+      ? "Your design is being created. You can open it in Canva to watch it unfold."
+      : tailVariant === 'remix'
+        ? "Review the content and click Edit to make changes in full screen, then click Generate design."
+        : tailVariant === 'generate-from-scratch'
+          ? "Adjust Casual, Balanced, or Playful if you like, then click Generate design."
+          : tailVariant === 'create-from-existing'
+            ? "Choose a template or design, review the content, then open Edit for full screen or generate when ready."
+            : hasChooserInThread
+              ? "Choose how you'd like to get started above, or pick another option anytime."
+              : "Scroll up to review earlier steps or continue below."
+
+  const chooserFollowUpText = "Choose how you'd like to get started above, or pick another option anytime."
+
+  const followUpForLiveWidget = (w) => {
+    if (w.variant === 'generate-from-scratch') {
+      return "Adjust Casual, Balanced, or Playful if you like, then click Generate design."
+    }
+    if (w.variant === 'create-from-existing') {
+      return "Choose a template or design, review the content, then open Edit for full screen or generate when ready."
+    }
+    if (w.variant === 'remix') {
+      return "Review the content and click Edit to make changes in full screen, then click Generate design."
+    }
+    return ''
+  }
+
+  const followUpForFrozenWidget = (entry) => {
+    switch (entry.variant) {
+      case 'generate-from-scratch':
+        return 'Outline and tone were set in this step — newer actions are below.'
+      case 'create-from-existing':
+        return `Design "${entry.cfeSnapshot?.name ?? 'selected'}" was chosen here — continue below.`
+      case 'remix':
+        return `${entry.remixSnap?.name ?? 'This design'} was opened for AI edits — continue below.`
+      case 'generating':
+        return 'Generation ran here — newer activity is below.'
+      default:
+        return 'Saved step above — continue below.'
+    }
+  }
+
+  const createFromExistingDeckItem = createExistingItem ?? brandTemplates[0]
+
+  const isGeneratingFromYourDesign =
+    widgetStep === 'generating' &&
+    noUserBrandTemplates &&
+    !!createExistingItem &&
+    yourDesigns.some((d) => d.id === createExistingItem.id)
+
+  const selectCreateExistingItem = (item, tab) => {
+    setCreateExistingItem(item)
+    setCreateTab(tab)
+    setCreateExistingPickerOpen(false)
+  }
+
+  const showCanvaStack = flowStep !== 'outline' && (secondaryPanelLoading || canvaThread.length > 0)
+  const showCanvaFallbackFollowUp = flowStep !== 'outline' && !showCanvaStack
+  const canvaScrollKey = `${canvaThread.map((e) => e.id).join('-')}-${lastWidgetId ?? ''}-${secondaryPanelLoading ? 1 : 0}`
+
+  const renderCreateFromExistingInteractive = (disableGenerateActions) => (
+                    <div className="canva-widget-with-header">
+                    <div className="options-container">
+                      <div className="generate-from-scratch-widget create-from-existing-widget">
+  
+                        <div className="generate-from-scratch-header generate-from-scratch-header--title-only">
+                          <h2 className="generate-widget-title">Create from existing design</h2>
+                        </div>
+                        <div className="outline-section-label">Select a design</div>
+                        <div className="create-existing-picker create-existing-picker--full" ref={createExistingPickerRef}>
+                          <button
+                            type="button"
+                            className={`tone-pill tone-pill--guided create-existing-picker-trigger ${createExistingPickerOpen ? 'active' : ''}`}
+                            aria-expanded={createExistingPickerOpen}
+                            aria-haspopup="listbox"
+                            aria-label={`${createFromExistingDeckItem.name}. Open to choose another template or design.`}
+                            onClick={() => setCreateExistingPickerOpen((o) => !o)}
+                          >
+                            <svg className="tone-pill-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
+                              <rect x="3" y="3" width="18" height="18" rx="2" />
+                              <path d="M3 9h18" />
+                              <path d="M9 21V9" />
+                            </svg>
+                            <span className="create-existing-picker-trigger-label">{createFromExistingDeckItem.name}</span>
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" aria-hidden className="tone-pill-chevron create-existing-picker-chevron">
+                              <polyline points="6 9 12 15 18 9" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                            </svg>
+                          </button>
+                          {createExistingPickerOpen ? (
+                            <div className="create-existing-picker-panel create-existing-picker-panel--full" role="listbox" aria-label="Templates and designs">
+                              <div className="segmented-control create-existing-picker-tabs">
+                                <button
+                                  type="button"
+                                  className={`segmented-tab ${createTab === 'brand-template' ? 'active' : ''}`}
+                                  onClick={() => handleTabClick('brand-template')}
+                                >
+                                  Brand template ({noUserBrandTemplates ? 0 : brandTemplates.length})
+                                </button>
+                                <button
+                                  type="button"
+                                  className={`segmented-tab ${createTab === 'your-designs' ? 'active' : ''}`}
+                                  onClick={() => handleTabClick('your-designs')}
+                                >
+                                  Your designs ({yourDesigns.length})
+                                </button>
+                              </div>
+                              <form
+                                className="template-search-bar picker-search-bar"
+                                onSubmit={(e) => e.preventDefault()}
+                              >
+                                <svg className="template-search-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                                  <circle cx="11" cy="11" r="8" />
+                                  <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                                </svg>
+                                <input
+                                  type="text"
+                                  className="template-search-input"
+                                  placeholder={`Search ${createTab === 'brand-template' ? 'brand templates' : 'your designs'}…`}
+                                  value={pickerSearchQuery}
+                                  onChange={(e) => setPickerSearchQuery(e.target.value)}
+                                  onClick={(e) => e.stopPropagation()}
+                                  autoComplete="off"
+                                />
+                                {pickerSearchQuery && (
+                                  <button
+                                    type="button"
+                                    className="picker-search-clear"
+                                    onClick={(e) => { e.stopPropagation(); setPickerSearchQuery(''); }}
+                                    aria-label="Clear search"
+                                  >
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                      <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                                    </svg>
+                                  </button>
+                                )}
+                              </form>
+                              <div className="template-list create-existing-picker-list">
+                                {noUserBrandTemplates && createTab === 'brand-template' ? (
+                                  <div className="picker-empty-state">
+                                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="rgba(13,13,13,0.25)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                                      <rect x="3" y="3" width="18" height="18" rx="3"/>
+                                      <path d="M3 9h18"/>
+                                      <path d="M9 21V9"/>
+                                    </svg>
+                                    <p className="picker-empty-title">No brand templates set up</p>
+                                    <p className="picker-empty-desc">Create a brand template in Canva to use your brand colours, fonts and logos automatically.</p>
+                                    <a
+                                      href="https://www.canva.com/brand/"
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="picker-empty-link"
+                                      onClick={(e) => e.stopPropagation()}
+                                    >
+                                      Set up a brand template in Canva →
+                                    </a>
+                                  </div>
+                                ) : (() => {
+                                  const baseList = createTab === 'brand-template' ? brandTemplates : yourDesigns
+                                  const filtered = pickerSearchQuery.trim()
+                                    ? baseList.filter(item => item.name.toLowerCase().includes(pickerSearchQuery.toLowerCase()))
+                                    : baseList
+                                  if (filtered.length === 0) {
+                                    return <p className="picker-no-results">No results for "{pickerSearchQuery}"</p>
+                                  }
+                                  return filtered.map((item) => {
+                                    const isSelected =
+                                      !!createExistingItem &&
+                                      item.id === createExistingItem.id &&
+                                      item.name === createExistingItem.name
+                                    return (
+                                      <div
+                                        key={`${createTab}-${item.id}-${item.name}`}
+                                        role="option"
+                                        aria-selected={isSelected}
+                                        className={`template-item ${isSelected ? 'template-item-selected' : ''}`}
+                                        onClick={() => selectCreateExistingItem(item, createTab)}
+                                      >
+                                        <div className="template-item-main">
+                                          <div className="template-thumb-wrap">
+                                            <div className={`template-thumb ${item.thumb ? '' : 'template-thumb-blank'}`}>
+                                              {item.thumb ? <img src={item.thumb} alt="" /> : null}
+                                            </div>
+                                            {isSelected && (
+                                              <div className="picker-thumb-selected-badge" aria-hidden>
+                                                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                                                  <polyline points="20 6 9 17 4 12"/>
+                                                </svg>
+                                              </div>
+                                            )}
+                                          </div>
+                                          <div className="template-info">
+                                            <p className="template-name">{item.name}</p>
+                                            <p className="template-type">{item.type}</p>
+                                          </div>
+                                        </div>
+                                        <div className="template-item-actions-right">
+                                          <div className="template-item-actions" onClick={(e) => e.stopPropagation()}>
+                                          <button
+                                            type="button"
+                                            className="template-action-btn template-action-preview"
+                                            onClick={() => {
+                                              setPreviewItem(item)
+                                              setPreviewFromPicker(true)
+                                              setCreateExistingPickerOpen(false)
+                                            }}
+                                          >
+                                            Preview
+                                          </button>
+                                          <button
+                                            type="button"
+                                            className="template-action-btn template-action-remix"
+                                            onClick={() => {
+                                              selectCreateExistingItem(item, createTab)
+                                            }}
+                                          >
+                                            Select
+                                          </button>
+                                          </div>
+                                        </div>
+                                      </div>
+                                    )
+                                  })
+                                })()}
+                              </div>
+  
+                            </div>
+                          ) : null}
+                        </div>
+                        <div className="outline-section-label">Review the outline content</div>
+                        <div
+                          className="outline-content-preview"
+                          onClick={() => setEditDocumentFullscreenOpen(true)}
+                          role="button"
+                          tabIndex={0}
+                          onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setEditDocumentFullscreenOpen(true); } }}
+                        >
+                          <div className="outline-content-preview-header">
+                            <span className="outline-content-preview-title">Editable document</span>
+                            <button
+                              type="button"
+                              className="outline-content-preview-open-btn"
+                              onClick={(e) => { e.stopPropagation(); setEditDocumentFullscreenOpen(true); }}
+                            >
+                              Edit
+                            </button>
+                          </div>
+                          <div className="outline-content-preview-body">
+                            <p className="outline-content-preview-doc-title">Deploy 2026 deck</p>
+                            <p className="outline-content-preview-text">{remixContent || 'Start typing here...'}</p>
+                            <div className="outline-preview-fade" />
+                          </div>
+                        </div>
+                        <div className="generate-widget-footer generate-widget-footer--cta-only">
+                          <button type="button" className="generate-design-btn" onClick={handleGenerateDesign} disabled={disableGenerateActions || secondaryPanelLoading}>
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                            Generate design
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                    </div>
+  )
+
+
+  useLayoutEffect(() => {
+    if (flowStep === 'outline') return
+    const el = chatScrollRef.current
+    if (!el) return
+    const scrollToBottom = () => {
+      el.scrollTop = el.scrollHeight
+    }
+    scrollToBottom()
+    let raf2 = 0
+    const raf1 = requestAnimationFrame(() => {
+      scrollToBottom()
+      raf2 = requestAnimationFrame(scrollToBottom)
+    })
+    const timeouts = [0, 120, 400, 700].map((ms) => window.setTimeout(scrollToBottom, ms))
+    if (!secondaryPanelLoading && tailVariant === 'generating') {
+      const seg = canvaLatestSegmentRef.current
+      if (seg) {
+        requestAnimationFrame(() => {
+          seg.scrollIntoView({ block: 'end', behavior: 'smooth' })
+        })
+      }
+    }
+    return () => {
+      cancelAnimationFrame(raf1)
+      cancelAnimationFrame(raf2)
+      timeouts.forEach(clearTimeout)
+    }
+  }, [
+    flowStep,
+    secondaryPanelLoading,
+    widgetStep,
+    canvaScrollKey,
+    showCanvaStack,
+    tailVariant,
+  ])
 
   return (
     <div className="chatgpt-layout">
@@ -513,7 +915,7 @@ Clear recommendations and what you need from the audience.
           <div className="header-dropdown">
             <span>ChatGPT 5</span>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M7 10l5 5 5-5z"/>
+              <polyline points="6 9 12 15 18 9" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
             </svg>
           </div>
           <div className="header-actions">
@@ -537,7 +939,7 @@ Clear recommendations and what you need from the audience.
 
         {/* Chat pane */}
         <div className="chat-pane">
-          <div className="chat-inner">
+          <div className="chat-inner" ref={chatScrollRef}>
             <div className="conversation">
               {/* Outline page - deck outline (from ChatGPT, not Canva). Figma prompt shown as user message. */}
               {flowStep === 'outline' && (
@@ -645,111 +1047,285 @@ Clear recommendations and what you need from the audience.
                 </div>
               )}
 
-              {/* Canva section - options or create-from-existing */}
+              {/* Canva section - stacked chooser + widgets */}
               {flowStep !== 'outline' && (
               <div className="app-content">
-                <div className="app-attribution">
-                  <div className="canva-logo">
-                    <img src="/Canva_Icon_logo.png" alt="Canva" width={24} height={24} />
+                {showCanvaStack ? (
+                <div className="canva-widget-stack">
+                  {canvaThread.length === 0 && secondaryPanelLoading ? (
+                  <div className="canva-tool-thread-block">
+                      <div
+                        className="canva-secondary-loading-chat"
+                        role="status"
+                        aria-live="polite"
+                        aria-label={SECONDARY_LOAD_MESSAGES[secondaryLoadPhaseIndex]}
+                      >
+                        <span className="chatgpt-loading-dot" aria-hidden />
+                        <span className="canva-secondary-loading-chat-message">
+                          {SECONDARY_LOAD_MESSAGES[secondaryLoadPhaseIndex]}
+                        </span>
+                      </div>
                   </div>
-                  <span>Canva</span>
-                </div>
-                <div className="options-container">
-                  {widgetStep === 'generating' ? (
-                    <div className="generating-widget">
-                      <div className="generating-preview-area">
-                        <div className={`generating-gradient-bg ${loadedSlideCount >= 1 ? 'faded' : ''}`} />
-                        {loadedSlideCount >= 1 && (
-                          <div className="generating-preview-bg">
-                            <img
-                              src={generatingPages[0]?.thumb}
-                              alt=""
-                              className={`generating-preview-bg-img ${mainPreviewUnblurred ? 'unblurred' : ''}`}
-                            />
-                          </div>
-                        )}
-                        <div className="generating-preview-content">
-                          <button type="button" className="generating-open-canva-btn" onClick={() => {
-                            const w = window.innerWidth;
-                            const h = window.innerHeight;
-                            try {
-                              localStorage.setItem('canva-from-chatgpt', JSON.stringify({
-                                pages: generatingPages,
-                                loadedSlideCount,
-                                mainPreviewUnblurred,
-                                visiblePageSlotsCount
-                              }));
-                            } catch (_) {}
-                            window.open('/canva-editor/index.html?from=chatgpt', '_blank', `width=${w},height=${h},left=0,top=0`);
-                          }}>Open in Canva</button>
+                  ) : (
+                  <>
+                  {canvaThread.map((entry) => {
+                    if (entry.type === 'chooser') {
+                      if (remixItem) return null
+                      return (
+                  <div key={entry.id} className="canva-thread-segment">
+                  <div className="app-attribution">
+                    <div className="canva-logo">
+                      <img src="/Canva_Icon_logo.png" alt="Canva" width={24} height={24} />
+                    </div>
+                    <span>Canva</span>
+                  </div>
+                  <div className={`options-container${chooserInteractive ? '' : ' options-container--stacked-past'}`}>
+                    <h2 className="section-title">Choose how you would like to get started</h2>
+                    <div className="cards-row">
+                      <div className="card" onClick={() => {
+                        if (!chooserInteractive) return
+                        runAfterSecondaryLoad(() => {
+                          setCanvaThread((t) => {
+                            const withSnap = snapshotPreviousTailWidget(t)
+                            return [...withSnap, { id: newCanvaThreadId(), type: 'widget', variant: 'generate-from-scratch' }]
+                          })
+                          setCreateExistingItem(null)
+                        })
+                      }}>
+                        <div className="card-thumbnail card-thumb-1">
+                          <div className="card-illustration card-illustration-blank card-illustration-blue" />
+                        </div>
+                        <div className="card-content">
+                          <p className="card-title">Generate from scratch</p>
+                          <p className="card-desc">Instantly create a full presentation from your prompt.</p>
                         </div>
                       </div>
-                      <div className="generating-slides-row">
-                        {generatingPages.slice(0, visiblePageSlotsCount).map((page, index) => (
-                          <div key={page.id} className="generating-slide-thumb">
-                            {index + 2 <= loadedSlideCount ? (
-                              <img src={page.thumb} alt={page.label} />
-                            ) : (
-                              <div className="generating-slide-gradient" />
-                            )}
+                      <div className="card" onClick={() => {
+                        if (!chooserInteractive) return
+                        setFlowStep('create-from-existing')
+                        runAfterSecondaryLoad(() => {
+                          setCanvaThread((t) => {
+                            const withSnap = snapshotPreviousTailWidget(t)
+                            return [...withSnap, { id: newCanvaThreadId(), type: 'widget', variant: 'create-from-existing' }]
+                          })
+                          setCreateExistingItem(brandTemplates[0])
+                          setPreSelectedDesign(null)
+                        })
+                      }}>
+                        <div className="card-thumbnail card-thumb-2">
+                          <div className="card-illustration card-illustration-blank card-illustration-orange" />
+                        </div>
+                        <div className="card-content">
+                          <p className="card-title">Create from existing design</p>
+                          <p className="card-desc">Start with a Canva design or template and customize it.</p>
+                        </div>
+                      </div>
+                      <div className="card card-autofill-coming-soon" onClick={() => {}}>
+                        <div className="card-thumbnail card-thumb-3">
+                          <div className="card-illustration card-illustration-blank card-illustration-green">
+                            <span className="card-coming-soon-banner">Coming soon</span>
                           </div>
-                        ))}
+                        </div>
+                        <div className="card-content">
+                          <p className="card-title">Autofill brand template</p>
+                          <p className="card-desc">Automatically fill a brand template with your content.</p>
+                        </div>
                       </div>
                     </div>
-                  ) : widgetStep === 'generate-from-scratch' ? (
-                    <div className="generate-from-scratch-widget">
-                      <div className="generate-from-scratch-header">
-                        <button type="button" className="back-btn" onClick={() => setWidgetStep('options')} aria-label="Back to options">
-                          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                            <path d="M19 12H5M12 19l-7-7 7-7"/>
-                          </svg>
-                        </button>
-                        <h2 className="generate-widget-title">Deploy 2026 deck</h2>
-                      </div>
-                      <div className="tone-pills">
-                        <button type="button" className={`tone-pill ${outlineTone === 'professional' ? 'active' : ''}`} onClick={() => setOutlineTone('professional')}>
-                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="9" cy="7" r="2"/><path d="M3 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2"/><circle cx="17" cy="7" r="2"/><path d="M21 21v-2a4 4 0 0 0-4-4h-4a4 4 0 0 0-4 4v2"/></svg>
-                          Professional
-                          <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M7 10l5 5 5-5z"/></svg>
-                        </button>
-                        <button type="button" className={`tone-pill ${outlineTone === 'balanced' ? 'active' : ''}`} onClick={() => setOutlineTone('balanced')}>
-                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 6h18"/><path d="M7 12h10"/><path d="M10 18h4"/></svg>
-                          Balanced
-                          <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M7 10l5 5 5-5z"/></svg>
-                        </button>
-                        <button type="button" className={`tone-pill ${outlineTone === 'playful' ? 'active' : ''}`} onClick={() => setOutlineTone('playful')}>
-                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>
-                          Playful
-                          <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M7 10l5 5 5-5z"/></svg>
-                        </button>
-                        <button type="button" className="tone-pill tone-pill-update">
-                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M23 4v6h-6"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
-                          Update
-                        </button>
-                      </div>
-                      <div className="outline-items">
-                        {generateFromScratchOutline.map((item) => (
-                          <div key={item.num} className="outline-item">
-                            <div className="outline-item-num">{item.num}</div>
-                            <div className="outline-item-content">
-                              <p className="outline-item-title">{item.title}</p>
-                              <p className="outline-item-desc">{item.desc}</p>
+                  </div>
+                  <div className="chatgpt-follow-up chatgpt-follow-up--post-widget">
+                    <p className="chatgpt-follow-up-text">{chooserFollowUpText}</p>
+                    <FollowUpActions />
+                  </div>
+                  </div>
+                      )
+                    }
+                    if (entry.type === 'widget') return null
+                    return null
+                  })}
+                  {widgetEntries.map((w, idx) => {
+                    const isLast = idx === widgetEntries.length - 1
+                    const lastW = widgetEntries[widgetEntries.length - 1]
+                    const penultimate = widgetEntries.length >= 2 ? widgetEntries[widgetEntries.length - 2] : null
+                    const keepCreateFromExistingFullAboveGen =
+                      w.variant === 'create-from-existing' &&
+                      lastW?.variant === 'generating' &&
+                      penultimate &&
+                      w.id === penultimate.id
+
+                    if (!isLast) {
+                      if (keepCreateFromExistingFullAboveGen) {
+                        return (
+                  <div key={w.id} className="canva-thread-segment">
+                  <div className="app-attribution">
+                    <div className="canva-logo">
+                      <img src="/Canva_Icon_logo.png" alt="Canva" width={24} height={24} />
+                    </div>
+                    <span>Canva</span>
+                  </div>
+                  <div className="canva-tool-thread-block">
+                    {renderCreateFromExistingInteractive(true)}
+                  </div>
+                  <div className="chatgpt-follow-up chatgpt-follow-up--post-widget">
+                    <p className="chatgpt-follow-up-text">Choose a template or design, review the content, then open Edit for full screen or generate when ready.</p>
+                    <FollowUpActions />
+                  </div>
+                  </div>
+                        )
+                      }
+                      return (
+                  <div key={w.id} className="canva-thread-segment">
+                  <div className="app-attribution">
+                    <div className="canva-logo">
+                      <img src="/Canva_Icon_logo.png" alt="Canva" width={24} height={24} />
+                    </div>
+                    <span>Canva</span>
+                  </div>
+                  <div className="options-container options-container--stacked-past">
+                    {w.variant === 'generate-from-scratch' ? (
+                      <>
+                        <h2 className="section-title">Generate from scratch</h2>
+                        <p className="canva-stack-frozen-desc">
+                          {w.outlineToneSnap
+                            ? `Tone: ${w.outlineToneSnap}. Outline configured — you opened another path below.`
+                            : 'Outline and tone configured — you opened another path below.'}
+                        </p>
+                      </>
+                    ) : null}
+                    {w.variant === 'create-from-existing' ? (
+                      <>
+                        <h2 className="section-title">Create from existing design</h2>
+                        <p className="canva-stack-frozen-desc">
+                          Starting from <strong>{w.cfeSnapshot?.name ?? 'your design'}</strong>.
+                        </p>
+                      </>
+                    ) : null}
+                    {w.variant === 'remix' ? (
+                      <>
+                        <h2 className="section-title">Edit with AI</h2>
+                        <p className="canva-stack-frozen-desc">{w.remixSnap?.name ?? 'Design'} — saved above.</p>
+                      </>
+                    ) : null}
+                    {w.variant === 'generating' ? (
+                      <>
+                        <h2 className="section-title">Live generation</h2>
+                        <p className="canva-stack-frozen-desc">Generation ran here — newer activity is below.</p>
+                      </>
+                    ) : null}
+                  </div>
+                  <div className="chatgpt-follow-up chatgpt-follow-up--post-widget">
+                    <p className="chatgpt-follow-up-text">{followUpForFrozenWidget(w)}</p>
+                    <FollowUpActions />
+                  </div>
+                  </div>
+                      )
+                    }
+
+                    if (w.variant === 'generating') {
+                      return (
+                  <div key={w.id} ref={canvaLatestSegmentRef} className="canva-thread-segment canva-thread-segment--latest">
+                  <div className="app-attribution">
+                    <div className="canva-logo">
+                      <img src="/Canva_Icon_logo.png" alt="Canva" width={24} height={24} />
+                    </div>
+                    <span>Canva</span>
+                  </div>
+                  <div className="canva-tool-thread-block">
+                  <div className="canva-widget-with-header">
+                  <div className="options-container">
+                    <div className="generating-widget">
+
+                      {(() => {
+                        const openInCanva = () => {
+                          const vw = window.innerWidth
+                          const vh = window.innerHeight
+                          try {
+                            localStorage.setItem('canva-from-chatgpt', JSON.stringify({
+                              pages: generatingPages,
+                              loadedSlideCount,
+                              mainPreviewUnblurred,
+                              visiblePageSlotsCount
+                            }))
+                          } catch (_) {}
+                          window.open('/canva-editor/index.html?from=chatgpt', '_blank', `width=${vw},height=${vh},left=0,top=0`)
+                        }
+                        return (
+                          <>
+                            <div className="generating-live-banner">
+                              <div className="generating-live-banner-left">
+                                <span className="generating-live-dot" aria-hidden />
+                                <span className="generating-live-text">Live generation is happening in Canva. Open it to watch your design unfurl.</span>
+                              </div>
+                              <button type="button" className="generating-open-canva-btn generating-open-canva-btn--banner" onClick={openInCanva}>
+                                Open in Canva
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                                  <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/>
+                                </svg>
+                              </button>
                             </div>
-                          </div>
-                        ))}
-                      </div>
-                      <div className="generate-widget-footer">
-                        <span className="more-pages">+ 10 more pages</span>
-                        <button type="button" className="generate-design-btn" onClick={handleGenerateDesign}>
-                          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-                          Generate design
-                        </button>
-                      </div>
+                            <div className="generating-preview-area">
+                              <div className={`generating-gradient-bg ${loadedSlideCount >= 1 ? 'faded' : ''}`} />
+                              {loadedSlideCount >= 1 && (
+                                <div className="generating-preview-bg">
+                                  <img
+                                    src={generatingPages[0]?.thumb}
+                                    alt=""
+                                    className={`generating-preview-bg-img ${mainPreviewUnblurred ? 'unblurred' : ''}`}
+                                  />
+                                </div>
+                              )}
+                            </div>
+                            <div className="generating-slides-row">
+                              {generatingPages.slice(0, visiblePageSlotsCount).map((page, index) => (
+                                <div key={page.id} className="generating-slide-thumb">
+                                  {index + 2 <= loadedSlideCount ? (
+                                    <img src={page.thumb} alt={page.label} />
+                                  ) : (
+                                    <div className="generating-slide-gradient" />
+                                  )}
+                                </div>
+                              ))}
+                            </div>
+                          </>
+                        )
+                      })()}
                     </div>
-                  ) : remixItem ? (
+                  </div>
+                  </div>
+                  </div>
+                  <div className="chatgpt-follow-up chatgpt-follow-up--post-widget">
+                    {w?.variant === 'generating' && isGeneratingFromYourDesign ? (
+                      <p className="chatgpt-follow-up-text">
+                        Your design is being created. You can open it in Canva to watch it unfold. We’ve also converted{' '}
+                        <strong>{createExistingItem?.name}</strong>
+                        {' '}into a brand template for you.{' '}
+                        <a href="#" className="chatgpt-follow-up-inline-link" onClick={(e) => e.preventDefault()}>View in Canva →</a>
+                      </p>
+                    ) : (
+                      <p className="chatgpt-follow-up-text">{canvaFollowUpHelperText}</p>
+                    )}
+                    <FollowUpActions />
+                  </div>
+                  </div>
+                      )
+                    }
+
+                    return (
+                  <div key={w.id} className="canva-thread-segment canva-thread-segment--latest">
+                  <div className="app-attribution">
+                    <div className="canva-logo">
+                      <img src="/Canva_Icon_logo.png" alt="Canva" width={24} height={24} />
+                    </div>
+                    <span>Canva</span>
+                  </div>
+                  <div className="canva-tool-thread-block">
+                  {w.variant === 'remix' && remixItem ? (
+                  <div className="canva-widget-with-header">
+                  <div className="options-container">
                     <div className="remix-with-ai-widget">
+
                       <div className="remix-widget-header">
-                        <button type="button" className="back-btn" onClick={() => { setRemixItem(null); setEditDocumentFullscreenOpen(false); }} aria-label="Back">
+                        <button type="button" className="back-btn" onClick={() => { popRemixWidgetFromThread(); }} aria-label="Back">
                           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                             <path d="M19 12H5M12 19l-7-7 7-7"/>
                           </svg>
@@ -765,27 +1341,18 @@ Clear recommendations and what you need from the audience.
                           <p className="remix-template-type">{remixItem.type}</p>
                         </div>
                         <div className="remix-template-actions">
-                          <button type="button" className="remix-btn-outline" onClick={() => { setRemixItem(null); setEditDocumentFullscreenOpen(false); }}>Change selection</button>
-                          {EXP.slideSelectionInPreview ? (
-                            <button type="button" className="remix-btn-outline" onClick={() => { setPreviewItem(remixItem); setPreviewWithSlidePick(true); }}>
-                              Adjust slides in preview
-                            </button>
-                          ) : (
-                            <button type="button" className="remix-btn-outline" onClick={() => {
-                              const pages = remixItem.pages || createPages()
-                              setSelectedPageIds(new Set(pages.map(p => p.id)))
-                              setChooseSlidesItem(remixItem)
-                            }}>
-                              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                <polyline points="20 6 9 17 4 12"/>
-                              </svg>
-                              Choose slides
-                            </button>
-                          )}
+                          <button type="button" className="remix-btn-outline" onClick={() => { popRemixWidgetFromThread(); }}>Change selection</button>
+                          <button type="button" className="remix-btn-outline" onClick={() => {
+                            const pages = remixItem.pages || createPages()
+                            setSelectedPageIds(new Set(pages.map(p => p.id)))
+                            setChooseSlidesItem(remixItem)
+                          }}>
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                              <polyline points="20 6 9 17 4 12"/>
+                            </svg>
+                            Choose slides
+                          </button>
                         </div>
-                        {EXP.autoSelectSlidesOverride && EXP.slideSelectionInPreview && (
-                          <p className="experiment-auto-slide-note">Slides were auto-selected (mock CDA). Use &quot;Adjust slides in preview&quot; to override.</p>
-                        )}
                       </div>
                       <div className="remix-review-section">
                         <h3 className="remix-review-label">Review the content</h3>
@@ -833,7 +1400,7 @@ Clear recommendations and what you need from the audience.
                         </div>
                       </div>
                       <div className="remix-widget-footer">
-                        <button type="button" className="remix-generate-btn" onClick={handleGenerateDesign}>
+                        <button type="button" className="remix-generate-btn" onClick={handleGenerateDesign} disabled={secondaryPanelLoading}>
                           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                             <polyline points="20 6 9 17 4 12"/>
                           </svg>
@@ -841,310 +1408,132 @@ Clear recommendations and what you need from the audience.
                         </button>
                       </div>
                     </div>
-                  ) : widgetStep === 'options' ? (
-                    <>
-                      <h2 className="section-title">Choose how you would like to get started</h2>
-                      <div className="cards-row">
-                        <div className="card" onClick={() => setWidgetStep('generate-from-scratch')}>
-                          <div className="card-thumbnail card-thumb-1">
-                            <div className="card-illustration card-illustration-blank card-illustration-blue" />
-                          </div>
-                          <div className="card-content">
-                            <p className="card-title">Generate from scratch</p>
-                            <p className="card-desc">Instantly create a full presentation from your prompt.</p>
-                          </div>
-                        </div>
-                        <div className="card" onClick={() => setWidgetStep('create-from-existing')}>
-                          <div className="card-thumbnail card-thumb-2">
-                            <div className="card-illustration card-illustration-blank card-illustration-orange" />
-                          </div>
-                          <div className="card-content">
-                            <p className="card-title">Create from existing design</p>
-                            <p className="card-desc">Start with a Canva design or template and customize it.</p>
-                          </div>
-                        </div>
-                        <div className="card card-autofill-coming-soon" onClick={() => {}}>
-                          <div className="card-thumbnail card-thumb-3">
-                            <div className="card-illustration card-illustration-blank card-illustration-green">
-                              <span className="card-coming-soon-banner">Coming soon</span>
-                            </div>
-                          </div>
-                          <div className="card-content">
-                            <p className="card-title">Autofill brand template</p>
-                            <p className="card-desc">Automatically fill a brand template with your content.</p>
-                          </div>
-                        </div>
+                  </div>
+                  </div>
+                  ) : null}
+                  {w.variant === 'generate-from-scratch' ? (
+                  <div className="canva-widget-with-header">
+                  <div className="options-container options-container--guided-scratch">
+                    <div className="generate-from-scratch-widget generate-from-scratch-widget--guided">
+
+                      <div className="generate-from-scratch-header generate-from-scratch-header--title-only">
+                        <h2 className="generate-widget-title">Generate from scratch</h2>
                       </div>
-                    </>
-                  ) : (
-                    <>
-                    <div className={`create-from-existing ${EXP.flatWidgetTransitions ? 'experiment-flat' : ''}`}>
-                      <div className="create-from-existing-header">
-                        <button type="button" className="back-btn" onClick={() => { setWidgetStep('options'); setFlowStep('options'); setPreSelectedDesign(null); }} aria-label="Back to options">
-                          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                            <path d="M19 12H5M12 19l-7-7 7-7"/>
+                      <div className="outline-section-label">Customise the outline</div>
+                      <div className="tone-pills tone-pills--guided">
+                        <button type="button" className={`tone-pill tone-pill--guided ${outlineTone === 'casual' ? 'active' : ''}`} onClick={() => setOutlineTone('casual')}>
+                          <svg className="tone-pill-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                            <circle cx="9" cy="7" r="4" />
+                            <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+                            <path d="M16 3.13a4 4 0 0 1 0 7.75" />
                           </svg>
+                          Casual
+                          <svg className="tone-pill-chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden><polyline points="6 9 12 15 18 9"/></svg>
                         </button>
-                        <h2 className="section-title create-from-existing-title">Create from existing design or template</h2>
+                        <button type="button" className={`tone-pill tone-pill--guided ${outlineTone === 'balanced' ? 'active' : ''}`} onClick={() => setOutlineTone('balanced')}>
+                          <svg className="tone-pill-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                            <rect x="3" y="3" width="18" height="18" rx="3" />
+                            <line x1="7" y1="8" x2="17" y2="8" />
+                            <line x1="7" y1="12" x2="17" y2="12" />
+                            <line x1="7" y1="16" x2="13" y2="16" />
+                          </svg>
+                          Balanced
+                          <svg className="tone-pill-chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden><polyline points="6 9 12 15 18 9"/></svg>
+                        </button>
+                        <button type="button" className={`tone-pill tone-pill--guided ${outlineTone === 'playful' ? 'active' : ''}`} onClick={() => setOutlineTone('playful')}>
+                          <svg className="tone-pill-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                            <circle cx="13.5" cy="6.5" r=".5" fill="currentColor" stroke="none" />
+                            <circle cx="17.5" cy="10.5" r=".5" fill="currentColor" stroke="none" />
+                            <circle cx="8.5" cy="7.5" r=".5" fill="currentColor" stroke="none" />
+                            <circle cx="6.5" cy="12.5" r=".5" fill="currentColor" stroke="none" />
+                            <path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.47-1.125-.29-.289-.47-.687-.47-1.125a1.64 1.64 0 0 1 1.648-1.688h1.96c3.073 0 5.684-2.539 5.684-5.664C22 6.216 17.5 2 12 2z" />
+                          </svg>
+                          Playful
+                          <svg className="tone-pill-chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden><polyline points="6 9 12 15 18 9"/></svg>
+                        </button>
+                        <button type="button" className="tone-pill tone-pill--guided">
+                          <svg className="tone-pill-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+                          </svg>
+                          Byte
+                          <svg className="tone-pill-chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden><polyline points="6 9 12 15 18 9"/></svg>
+                        </button>
+                        <button type="button" className="tone-pill tone-pill--guided tone-pill-update">
+                          <svg className="tone-pill-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                            <path d="M23 4v6h-6" />
+                            <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10" />
+                          </svg>
+                          Update
+                        </button>
                       </div>
-                      {EXP.flatWidgetTransitions && (
-                        <p className="experiment-flow-label">New step in chat: pick a design. You can change it anytime with &quot;Change selection&quot; — no extra navigation depth.</p>
-                      )}
-                      {!EXP.unifiedTemplateView && (
-                      <div className="segmented-control">
-                        <button type="button" className={`segmented-tab ${createTab === 'brand-template' ? 'active' : ''}`} onClick={() => handleTabClick('brand-template')}>Brand template ({brandTemplateCount})</button>
-                        <button type="button" className={`segmented-tab ${createTab === 'your-designs' ? 'active' : ''}`} onClick={() => handleTabClick('your-designs')}>Your designs ({yourDesignsCount})</button>
-                        {SHOW_SEARCH_BY_URL_TAB && (
-                        <button type="button" className={`segmented-tab ${createTab === 'search' ? 'active' : ''}`} onClick={() => handleTabClick('search')}>Search by URL</button>
-                        )}
-                      </div>
-                      )}
-                      {preSelectedDesign && EXP.earlyDesignHero && (
-                        <div className="early-design-hero">
-                          <div className="early-design-hero-thumb">
-                            {preSelectedDesign.thumb ? <img src={preSelectedDesign.thumb} alt="" /> : null}
-                          </div>
-                          <div className="early-design-hero-info">
-                            <p className="early-design-hero-label">Selected design</p>
-                            <p className="early-design-hero-name">{preSelectedDesign.name}</p>
-                            <p className="early-design-hero-type">{preSelectedDesign.type}</p>
-                            <button type="button" className="early-design-hero-change" onClick={() => setPreSelectedDesign(null)}>Change selection</button>
-                          </div>
+                      <div className="outline-section-label">Review the outline content</div>
+                      <div
+                        className="outline-content-preview"
+                        onClick={() => setEditDocumentFullscreenOpen(true)}
+                        role="button"
+                        tabIndex={0}
+                        onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setEditDocumentFullscreenOpen(true); } }}
+                      >
+                        <div className="outline-content-preview-header">
+                          <span className="outline-content-preview-title">Editable document</span>
+                          <button
+                            type="button"
+                            className="outline-content-preview-open-btn"
+                            onClick={(e) => { e.stopPropagation(); setEditDocumentFullscreenOpen(true); }}
+                          >
+                            Edit
+                          </button>
                         </div>
-                      )}
-                      {preSelectedDesign && !EXP.earlyDesignHero && !EXP.unifiedTemplateView && (
-                        <>
-                          <form className="template-search-bar" onSubmit={handleTemplateSearch}>
-                            <img src="/svg/startIcon-1.svg" alt="" className="template-search-icon" width={24} height={24} aria-hidden />
-                            <input
-                              type="text"
-                              className="template-search-input"
-                              placeholder={createTab === 'brand-template' ? 'Search Brand Templates' : 'Search your designs'}
-                              value={searchQuery}
-                              onChange={(e) => handleSearchQueryChange(e.target.value)}
-                            />
-                            <button type="submit" className="template-search-btn">Search</button>
-                          </form>
-                          <p className="search-finding-heading">Finding results from Canva</p>
-                          <div className="template-list">
-                            <TemplateItem key={preSelectedDesign.id} item={preSelectedDesign} onPreview={setPreviewItem} onRemix={handleRemixClick} />
-                          </div>
-                        </>
-                      )}
-                      {preSelectedDesign && EXP.earlyDesignHero && !EXP.unifiedTemplateView && (
-                        <>
-                          <p className="search-secondary-heading">Browse or search to pick a different design</p>
-                          <form className="template-search-bar" onSubmit={handleTemplateSearch}>
-                            <img src="/svg/startIcon-1.svg" alt="" className="template-search-icon" width={24} height={24} aria-hidden />
-                            <input
-                              type="text"
-                              className="template-search-input"
-                              placeholder={createTab === 'brand-template' ? 'Search Brand Templates' : 'Search your designs'}
-                              value={searchQuery}
-                              onChange={(e) => handleSearchQueryChange(e.target.value)}
-                            />
-                            <button type="submit" className="template-search-btn">Search</button>
-                          </form>
-                          <p className="search-finding-heading">Finding results from Canva</p>
-                          <div className="template-list">
-                            <TemplateItem key={preSelectedDesign.id} item={preSelectedDesign} onPreview={setPreviewItem} onRemix={handleRemixClick} />
-                          </div>
-                        </>
-                      )}
-                      {preSelectedDesign && EXP.earlyDesignHero && EXP.unifiedTemplateView && (
-                        <>
-                          <p className="search-secondary-heading">Browse all templates and designs below, or search</p>
-                          <form className="template-search-bar" onSubmit={handleTemplateSearch}>
-                            <img src="/svg/startIcon-1.svg" alt="" className="template-search-icon" width={24} height={24} aria-hidden />
-                            <input
-                              type="text"
-                              className="template-search-input"
-                              placeholder="Search brand templates and your designs"
-                              value={searchQuery}
-                              onChange={(e) => handleSearchQueryChange(e.target.value)}
-                            />
-                            <button type="submit" className="template-search-btn">Search</button>
-                          </form>
-                        </>
-                      )}
-                      {EXP.unifiedTemplateView && !preSelectedDesign && (
-                        <>
-                          <form className="template-search-bar" onSubmit={handleTemplateSearch}>
-                            <img src="/svg/startIcon-1.svg" alt="" className="template-search-icon" width={24} height={24} aria-hidden />
-                            <input
-                              type="text"
-                              className="template-search-input"
-                              placeholder="Search brand templates and your designs"
-                              value={searchQuery}
-                              onChange={(e) => handleSearchQueryChange(e.target.value)}
-                            />
-                            <button type="submit" className="template-search-btn">Search</button>
-                          </form>
-                          {!isSearching && (
-                            <>
-                              <h3 className="unified-section-title">Brand templates</h3>
-                              <div className="template-list">
-                                {brandTemplates.map(item => <TemplateItem key={item.id} item={item} onPreview={setPreviewItem} onRemix={handleRemixClick} />)}
-                              </div>
-                              <h3 className="unified-section-title">Recent designs</h3>
-                              <div className="template-list">
-                                {yourDesigns.map(item => <TemplateItem key={item.id} item={item} onPreview={setPreviewItem} onRemix={handleRemixClick} />)}
-                              </div>
-                            </>
-                          )}
-                          {isSearching && (
-                            <>
-                              <p className="search-finding-heading">Finding results from Canva</p>
-                              {(brandTemplateSearchResults.length > 0 || (searchQueryResult.length > 0 && createTab === 'brand-template')) && (
-                                <>
-                                  <h3 className="unified-section-title">Brand templates</h3>
-                                  <div className="template-list template-search-results">
-                                    {brandTemplateSearchResults.map(item => <TemplateItem key={item.id} item={item} onPreview={setPreviewItem} onRemix={handleRemixClick} />)}
-                                    {createTab === 'brand-template' && searchQueryResult.map(item => <TemplateItem key={item.id} item={item} onPreview={setPreviewItem} onRemix={handleRemixClick} />)}
-                                  </div>
-                                </>
-                              )}
-                              {(yourDesignsSearchResults.length > 0 || canvaNewResults.length > 0 || (searchQueryResult.length > 0 && createTab === 'your-designs')) && (
-                                <>
-                                  <h3 className="unified-section-title">Recent designs</h3>
-                                  <div className="template-list template-search-results">
-                                    {yourDesignsSearchResults.map(item => <TemplateItem key={item.id} item={item} onPreview={setPreviewItem} onRemix={handleRemixClick} />)}
-                                    {canvaNewResults.map(item => <TemplateItem key={item.id} item={item} onPreview={setPreviewItem} onRemix={handleRemixClick} />)}
-                                    {createTab === 'your-designs' && searchQueryResult.map(item => <TemplateItem key={item.id} item={item} onPreview={setPreviewItem} onRemix={handleRemixClick} />)}
-                                  </div>
-                                </>
-                              )}
-                            </>
-                          )}
-                        </>
-                      )}
-                      {EXP.unifiedTemplateView && preSelectedDesign && (
-                        <>
-                          {!isSearching && (
-                            <>
-                              <h3 className="unified-section-title">Brand templates</h3>
-                              <div className="template-list">
-                                {brandTemplates.filter((t) => t.id !== preSelectedDesign.id).map(item => <TemplateItem key={item.id} item={item} onPreview={setPreviewItem} onRemix={handleRemixClick} />)}
-                              </div>
-                              <h3 className="unified-section-title">Recent designs</h3>
-                              <div className="template-list">
-                                {yourDesigns.filter((d) => d.id !== preSelectedDesign.id).map(item => <TemplateItem key={item.id} item={item} onPreview={setPreviewItem} onRemix={handleRemixClick} />)}
-                              </div>
-                            </>
-                          )}
-                          {isSearching && (
-                            <>
-                              <p className="search-finding-heading">Finding results from Canva</p>
-                              {(brandTemplateSearchResults.length > 0 || (searchQueryResult.length > 0 && createTab === 'brand-template')) && (
-                                <>
-                                  <h3 className="unified-section-title">Brand templates</h3>
-                                  <div className="template-list template-search-results">
-                                    {brandTemplateSearchResults.map(item => <TemplateItem key={item.id} item={item} onPreview={setPreviewItem} onRemix={handleRemixClick} />)}
-                                    {createTab === 'brand-template' && searchQueryResult.map(item => <TemplateItem key={item.id} item={item} onPreview={setPreviewItem} onRemix={handleRemixClick} />)}
-                                  </div>
-                                </>
-                              )}
-                              {(yourDesignsSearchResults.length > 0 || canvaNewResults.length > 0 || (searchQueryResult.length > 0 && createTab === 'your-designs')) && (
-                                <>
-                                  <h3 className="unified-section-title">Recent designs</h3>
-                                  <div className="template-list template-search-results">
-                                    {yourDesignsSearchResults.map(item => <TemplateItem key={item.id} item={item} onPreview={setPreviewItem} onRemix={handleRemixClick} />)}
-                                    {canvaNewResults.map(item => <TemplateItem key={item.id} item={item} onPreview={setPreviewItem} onRemix={handleRemixClick} />)}
-                                    {createTab === 'your-designs' && searchQueryResult.map(item => <TemplateItem key={item.id} item={item} onPreview={setPreviewItem} onRemix={handleRemixClick} />)}
-                                  </div>
-                                </>
-                              )}
-                            </>
-                          )}
-                        </>
-                      )}
-                      {!EXP.unifiedTemplateView && !preSelectedDesign && (createTab === 'brand-template' || createTab === 'your-designs') && (
-                        <>
-                          <form className="template-search-bar" onSubmit={handleTemplateSearch}>
-                            <img src="/svg/startIcon-1.svg" alt="" className="template-search-icon" width={24} height={24} aria-hidden />
-                            <input
-                              type="text"
-                              className="template-search-input"
-                              placeholder={createTab === 'brand-template' ? 'Search Brand Templates' : 'Search your designs'}
-                              value={searchQuery}
-                              onChange={(e) => handleSearchQueryChange(e.target.value)}
-                            />
-                            <button type="submit" className="template-search-btn">Search</button>
-                          </form>
-                          {!isSearching && createTab === 'brand-template' && (
-                            <div className="template-list">
-                              {brandTemplates.map(item => <TemplateItem key={item.id} item={item} onPreview={setPreviewItem} onRemix={handleRemixClick} />)}
-                            </div>
-                          )}
-                          {!isSearching && createTab === 'your-designs' && (
-                            <div className="template-list">
-                              {yourDesigns.map(item => <TemplateItem key={item.id} item={item} onPreview={setPreviewItem} onRemix={handleRemixClick} />)}
-                            </div>
-                          )}
-                          {isSearching && (
-                            <>
-                              <p className="search-finding-heading">Finding results from Canva</p>
-                              {((createTab === 'brand-template' && (brandTemplateSearchResults.length > 0 || searchQueryResult.length > 0)) ||
-                                (createTab === 'your-designs' && (yourDesignsSearchResults.length > 0 || canvaNewResults.length > 0 || searchQueryResult.length > 0))) && (
-                                <div className="template-list template-search-results">
-                                  {createTab === 'brand-template' && (
-                                    <>
-                                      {brandTemplateSearchResults.map(item => <TemplateItem key={item.id} item={item} onPreview={setPreviewItem} onRemix={handleRemixClick} />)}
-                                      {searchQueryResult.map(item => <TemplateItem key={item.id} item={item} onPreview={setPreviewItem} onRemix={handleRemixClick} />)}
-                                    </>
-                                  )}
-                                  {createTab === 'your-designs' && (
-                                    <>
-                                      {yourDesignsSearchResults.map(item => <TemplateItem key={item.id} item={item} onPreview={setPreviewItem} onRemix={handleRemixClick} />)}
-                                      {canvaNewResults.map(item => <TemplateItem key={item.id} item={item} onPreview={setPreviewItem} onRemix={handleRemixClick} />)}
-                                      {searchQueryResult.map(item => <TemplateItem key={item.id} item={item} onPreview={setPreviewItem} onRemix={handleRemixClick} />)}
-                                    </>
-                                  )}
-                                </div>
-                              )}
-                            </>
-                          )}
-                        </>
-                      )}
-                      {SHOW_SEARCH_BY_URL_TAB && !preSelectedDesign && createTab === 'search' && (
-                        <>
-                          <form className="template-search-bar" onSubmit={handleUrlSearch}>
-                            <img src="/svg/link.svg" alt="" className="template-search-icon" width={24} height={24} aria-hidden />
-                            <input
-                              type="text"
-                              className="template-search-input"
-                              placeholder="canva.com/design"
-                              value={urlSearchQuery}
-                              onChange={(e) => setUrlSearchQuery(e.target.value)}
-                            />
-                            <button type="submit" className="template-search-btn">Search</button>
-                          </form>
-                          {urlSearchResult && (
-                            <div className="template-list">
-                              <TemplateItem item={urlSearchResult} onPreview={setPreviewItem} onRemix={handleRemixClick} />
-                            </div>
-                          )}
-                        </>
-                      )}
+                        <div className="outline-content-preview-body">
+                          <p className="outline-content-preview-doc-title">Deploy 2026 deck</p>
+                          <p className="outline-content-preview-text">{remixContent}</p>
+                          <div className="outline-preview-fade" />
+                        </div>
+                      </div>
+                      <div className="generate-widget-footer generate-widget-footer--cta-only">
+                        <button type="button" className="generate-design-btn generate-design-btn--guided" onClick={handleGenerateDesign} disabled={secondaryPanelLoading}>
+                          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden><polyline points="20 6 9 17 4 12" /></svg>
+                          Generate design
+                        </button>
+                      </div>
                     </div>
-                    </>
-                  )}
-                </div>
-                {flowStep !== 'outline' && (
-                  <ChatGptFollowUp
-                    text={
-                      widgetStep === 'generating'
-                        ? "Your design is being created. You can open it in Canva to watch it unfold."
-                        : remixItem
-                          ? "Review the content and click Edit to make changes in full screen, then click Generate design."
-                          : widgetStep === 'generate-from-scratch'
-                            ? "Pick your tone and hit Generate design when ready."
-                            : widgetStep === 'create-from-existing'
-                              ? "Experiment: a design may be pre-selected; search is prefilled from your prompt when helpful. Browse both brand templates and recent designs in one list."
-                              : "Pick one of the options above to get started."
-                    }
-                  />
+                  </div>
+                  </div>
+                  ) : null}
+                  {w.variant === 'create-from-existing' ? (
+                  renderCreateFromExistingInteractive(false)
+                  ) : null}
+                  </div>
+                  <div className="chatgpt-follow-up chatgpt-follow-up--post-widget">
+                    <p className="chatgpt-follow-up-text">{followUpForLiveWidget(w)}</p>
+                    <FollowUpActions />
+                  </div>
+                  </div>
+                    )
+                  })}
+                  {secondaryPanelLoading && widgetEntries.length > 0 && widgetEntries[widgetEntries.length - 1]?.variant !== 'generating' ? (
+                  <div className="canva-tool-thread-block">
+                      <div
+                        className="canva-secondary-loading-chat"
+                        role="status"
+                        aria-live="polite"
+                        aria-label={SECONDARY_LOAD_MESSAGES[secondaryLoadPhaseIndex]}
+                      >
+                        <span className="chatgpt-loading-dot" aria-hidden />
+                        <span className="canva-secondary-loading-chat-message">
+                          {SECONDARY_LOAD_MESSAGES[secondaryLoadPhaseIndex]}
+                        </span>
+                      </div>
+                  </div>
+                  ) : null}
+                  </>
                 )}
+                </div>
+                ) : null}
+                {showCanvaFallbackFollowUp ? (
+                  <ChatGptFollowUp text={canvaFollowUpHelperText} />
+                ) : null}
               </div>
               )}
             </div>
@@ -1231,8 +1620,8 @@ Clear recommendations and what you need from the audience.
         </div>
       </main>
 
-      {/* Choose slides fullscreen — skipped when slide selection lives in preview */}
-      {chooseSlidesItem && !EXP.slideSelectionInPreview && (
+      {/* Choose slides fullscreen - select pages to edit */}
+      {chooseSlidesItem && (
         <div className="preview-fullscreen choose-slides-fullscreen">
           <header className="preview-header">
             <div className="preview-header-left">
@@ -1326,7 +1715,7 @@ Clear recommendations and what you need from the audience.
       )}
 
       {/* Full-screen edit document - edit content in full screen */}
-      {editDocumentFullscreenOpen && remixItem && (
+      {editDocumentFullscreenOpen && (remixItem || createExistingItem || widgetStep === 'generate-from-scratch') && (
         <div className="preview-fullscreen edit-document-fullscreen">
           <header className="preview-header">
             <div className="preview-header-left">
@@ -1382,15 +1771,21 @@ Clear recommendations and what you need from the audience.
         </div>
       )}
 
-      {/* Full-screen design preview — optional slide selection (experiment) */}
+      {/* Full-screen design preview - all pages in grid */}
       {previewItem && (
-        <div className={`preview-fullscreen ${EXP.slideSelectionInPreview && previewWithSlidePick ? 'choose-slides-fullscreen' : ''}`}>
+        <div className="preview-fullscreen">
           <header className="preview-header">
             <div className="preview-header-left">
               <button
                 type="button"
                 className="preview-close-btn"
-                onClick={() => { setPreviewItem(null); setPreviewWithSlidePick(false); }}
+                onClick={() => {
+                  setPreviewItem(null)
+                  if (previewFromPicker) {
+                    setPreviewFromPicker(false)
+                    setCreateExistingPickerOpen(true)
+                  }
+                }}
                 aria-label="Close preview"
               >
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -1398,106 +1793,21 @@ Clear recommendations and what you need from the audience.
                   <line x1="6" y1="6" x2="18" y2="18"/>
                 </svg>
               </button>
-              <h1 className="preview-title">
-                {EXP.slideSelectionInPreview && previewWithSlidePick ? 'Select slides to include' : previewItem.name}
-              </h1>
+              <h1 className="preview-title">{previewItem.name}</h1>
             </div>
           </header>
           <main className="preview-main">
-            {EXP.slideSelectionInPreview && previewWithSlidePick && (
-              <p className="experiment-preview-slide-hint">Tap slides to include or exclude. Then continue to editing.</p>
-            )}
             <div className="preview-pages-grid">
-              {(previewItem.pages || createPages()).map((page) => {
-                const slideMode = EXP.slideSelectionInPreview && previewWithSlidePick
-                const isSelected = selectedPageIds.has(page.id)
-                const toggleSlide = () => {
-                  setSelectedPageIds((prev) => {
-                    const next = new Set(prev)
-                    if (next.has(page.id)) next.delete(page.id)
-                    else next.add(page.id)
-                    return next
-                  })
-                }
-                return (
-                  <div
-                    key={page.id}
-                    role={slideMode ? 'button' : undefined}
-                    tabIndex={slideMode ? 0 : undefined}
-                    className={`preview-page-card ${slideMode ? `choose-slides-page-card ${isSelected ? 'selected' : ''}` : ''}`}
-                    onClick={slideMode ? toggleSlide : undefined}
-                    onKeyDown={slideMode ? (e) => {
-                      if (e.key === 'Enter' || e.key === ' ') {
-                        e.preventDefault()
-                        toggleSlide()
-                      }
-                    } : undefined}
-                  >
-                    <p className="preview-page-label">{page.label}</p>
-                    <div className={`preview-page-thumb ${slideMode ? 'choose-slides-thumb' : ''}`}>
-                      {slideMode && (
-                        <div className="choose-slides-checkbox" aria-hidden>
-                          {isSelected ? (
-                            <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-                              <rect width="20" height="20" rx="4" fill="#8b3dff"/>
-                              <path d="M5 10l3 3 7-7" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                            </svg>
-                          ) : (
-                            <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-                              <rect x="1" y="1" width="18" height="18" rx="4" fill="white" stroke="rgba(13, 13, 13, 0.2)" strokeWidth="2"/>
-                            </svg>
-                          )}
-                        </div>
-                      )}
-                      <img src={page.thumb} alt={page.label} />
-                    </div>
+              {(previewItem.pages || createPages()).map((page) => (
+                <div key={page.id} className="preview-page-card">
+                  <p className="preview-page-label">{page.label}</p>
+                  <div className="preview-page-thumb">
+                    <img src={page.thumb} alt={page.label} />
                   </div>
-                )
-              })}
+                </div>
+              ))}
             </div>
           </main>
-          <footer className="preview-footer">
-            {EXP.slideSelectionInPreview && previewWithSlidePick ? (
-              <>
-                <button
-                  type="button"
-                  className="preview-remix-btn choose-slides-remix-btn"
-                  onClick={() => { setPreviewWithSlidePick(false); }}
-                >
-                  Done selecting ({selectedPageIds.size} slide{selectedPageIds.size !== 1 ? 's' : ''})
-                </button>
-                <button
-                  type="button"
-                  className="preview-remix-btn"
-                  onClick={() => {
-                    handleRemixClick(previewItem)
-                    setPreviewItem(null)
-                    setPreviewWithSlidePick(false)
-                  }}
-                >
-                  Edit with AI
-                </button>
-              </>
-            ) : (
-              <>
-                {EXP.slideSelectionInPreview && (
-                  <button type="button" className="preview-remix-btn choose-slides-remix-btn" onClick={() => setPreviewWithSlidePick(true)}>
-                    Select slides here
-                  </button>
-                )}
-                <button type="button" className="preview-remix-btn" onClick={() => handleRemixClick(previewItem)}>Edit with AI</button>
-              </>
-            )}
-            <div className="preview-composer">
-              <button type="button" className="preview-composer-icon" aria-label="Add">
-                <img src="/svg/Icon.svg" alt="" width={20} height={20} />
-              </button>
-              <input type="text" className="preview-composer-input" placeholder="Ask anything" />
-              <button type="button" className="preview-composer-send" aria-label="Send">
-                <img src="/svg/_Composer-action/Send.svg" alt="" width={36} height={36} />
-              </button>
-            </div>
-          </footer>
         </div>
       )}
 
