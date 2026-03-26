@@ -14,6 +14,8 @@ function App() {
   const [visiblePageSlotsCount, setVisiblePageSlotsCount] = useState(0) // page slots shown below (loading states)
   const [preSelectedDesign, setPreSelectedDesign] = useState(null) // legacy / outline navigation
   const [createExistingItem, setCreateExistingItem] = useState(null) // selected template or design in create-from-existing flow
+  /** 'preserve' | 'condense' — how to treat source content when generating from an existing design */
+  const [createExistingContentMode, setCreateExistingContentMode] = useState('preserve')
   const [createExistingPickerOpen, setCreateExistingPickerOpen] = useState(false)
   const createExistingPickerRef = useRef(null)
   const chatScrollRef = useRef(null)
@@ -267,6 +269,7 @@ Clear recommendations and what you need from the audience. Make the ask specific
     const enriched = { ...w, frozen: true }
     if (w.variant === 'create-from-existing' && createExistingItem) {
       enriched.cfeSnapshot = { ...createExistingItem }
+      enriched.cfeContentModeSnap = createExistingContentMode
     }
     if (w.variant === 'generate-from-scratch') {
       enriched.outlineToneSnap = outlineTone
@@ -593,7 +596,7 @@ Clear recommendations and what you need from the audience. Make the ask specific
         : tailVariant === 'generate-from-scratch'
           ? "Adjust Casual, Balanced, or Playful if you like, then click Generate design."
           : tailVariant === 'create-from-existing'
-            ? "Choose a template or design, review the content, then open Edit for full screen or generate when ready."
+            ? "Choose a template or design, pick Preserve content or Condense content, then click Generate design."
             : hasChooserInThread
               ? "Choose how you'd like to get started above, or pick another option anytime."
               : "Scroll up to review earlier steps or continue below."
@@ -605,7 +608,7 @@ Clear recommendations and what you need from the audience. Make the ask specific
       return "Adjust Casual, Balanced, or Playful if you like, then click Generate design."
     }
     if (w.variant === 'create-from-existing') {
-      return "Choose a template or design, review the content, then open Edit for full screen or generate when ready."
+      return "Choose a template or design, pick Preserve content or Condense content, then click Generate design."
     }
     if (w.variant === 'remix') {
       return "Review the content and click Edit to make changes in full screen, then click Generate design."
@@ -617,8 +620,16 @@ Clear recommendations and what you need from the audience. Make the ask specific
     switch (entry.variant) {
       case 'generate-from-scratch':
         return 'Outline and tone were set in this step — newer actions are below.'
-      case 'create-from-existing':
-        return `Design "${entry.cfeSnapshot?.name ?? 'selected'}" was chosen here — continue below.`
+      case 'create-from-existing': {
+        const mode =
+          entry.cfeContentModeSnap === 'condense'
+            ? 'Condense content'
+            : entry.cfeContentModeSnap === 'preserve'
+              ? 'Preserve content'
+              : ''
+        const modePart = mode ? ` (${mode})` : ''
+        return `Design "${entry.cfeSnapshot?.name ?? 'selected'}"${modePart} was set here — continue below.`
+      }
       case 'remix':
         return `${entry.remixSnap?.name ?? 'This design'} was opened for AI edits — continue below.`
       case 'generating':
@@ -814,29 +825,22 @@ Clear recommendations and what you need from the audience. Make the ask specific
                             </div>
                           ) : null}
                         </div>
-                        <div className="outline-section-label">Review the outline content</div>
-                        <div
-                          className="outline-content-preview"
-                          onClick={() => setEditDocumentFullscreenOpen(true)}
-                          role="button"
-                          tabIndex={0}
-                          onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setEditDocumentFullscreenOpen(true); } }}
-                        >
-                          <div className="outline-content-preview-header">
-                            <span className="outline-content-preview-title">Editable document</span>
-                            <button
-                              type="button"
-                              className="outline-content-preview-open-btn"
-                              onClick={(e) => { e.stopPropagation(); setEditDocumentFullscreenOpen(true); }}
-                            >
-                              Edit
-                            </button>
-                          </div>
-                          <div className="outline-content-preview-body">
-                            <p className="outline-content-preview-doc-title">Deploy 2026 deck</p>
-                            <p className="outline-content-preview-text">{remixContent || 'Start typing here...'}</p>
-                            <div className="outline-preview-fade" />
-                          </div>
+                        <div className="outline-section-label">Content treatment</div>
+                        <div className="segmented-control create-existing-content-mode" role="group" aria-label="Content treatment">
+                          <button
+                            type="button"
+                            className={`segmented-tab ${createExistingContentMode === 'preserve' ? 'active' : ''}`}
+                            onClick={() => setCreateExistingContentMode('preserve')}
+                          >
+                            Preserve content
+                          </button>
+                          <button
+                            type="button"
+                            className={`segmented-tab ${createExistingContentMode === 'condense' ? 'active' : ''}`}
+                            onClick={() => setCreateExistingContentMode('condense')}
+                          >
+                            Condense content
+                          </button>
                         </div>
                         <div className="generate-widget-footer generate-widget-footer--cta-only">
                           <button type="button" className="generate-design-btn" onClick={handleGenerateDesign} disabled={disableGenerateActions || secondaryPanelLoading}>
@@ -1167,7 +1171,7 @@ Clear recommendations and what you need from the audience. Make the ask specific
                     {renderCreateFromExistingInteractive(true)}
                   </div>
                   <div className="chatgpt-follow-up chatgpt-follow-up--post-widget">
-                    <p className="chatgpt-follow-up-text">Choose a template or design, review the content, then open Edit for full screen or generate when ready.</p>
+                    <p className="chatgpt-follow-up-text">Choose a template or design, pick Preserve content or Condense content, then generate when ready.</p>
                     <FollowUpActions />
                   </div>
                   </div>
@@ -1196,7 +1200,13 @@ Clear recommendations and what you need from the audience. Make the ask specific
                       <>
                         <h2 className="section-title">Create from existing design</h2>
                         <p className="canva-stack-frozen-desc">
-                          Starting from <strong>{w.cfeSnapshot?.name ?? 'your design'}</strong>.
+                          Starting from <strong>{w.cfeSnapshot?.name ?? 'your design'}</strong>
+                          {w.cfeContentModeSnap === 'condense'
+                            ? ' · Condense content'
+                            : w.cfeContentModeSnap === 'preserve'
+                              ? ' · Preserve content'
+                              : ''}
+                          .
                         </p>
                       </>
                     ) : null}
@@ -1512,7 +1522,9 @@ Clear recommendations and what you need from the audience. Make the ask specific
                   </div>
                     )
                   })}
-                  {secondaryPanelLoading && widgetEntries.length > 0 && widgetEntries[widgetEntries.length - 1]?.variant !== 'generating' ? (
+                  {secondaryPanelLoading &&
+                  (widgetEntries.length > 0 || hasChooserInThread) &&
+                  widgetEntries[widgetEntries.length - 1]?.variant !== 'generating' ? (
                   <div className="canva-tool-thread-block">
                       <div
                         className="canva-secondary-loading-chat"
@@ -1715,7 +1727,7 @@ Clear recommendations and what you need from the audience. Make the ask specific
       )}
 
       {/* Full-screen edit document - edit content in full screen */}
-      {editDocumentFullscreenOpen && (remixItem || createExistingItem || widgetStep === 'generate-from-scratch') && (
+      {editDocumentFullscreenOpen && (remixItem || widgetStep === 'generate-from-scratch') && (
         <div className="preview-fullscreen edit-document-fullscreen">
           <header className="preview-header">
             <div className="preview-header-left">
