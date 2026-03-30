@@ -1,6 +1,5 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { Routes, Route } from 'react-router-dom';
-import { setupAuth } from '@canva-ct/genai';
 import './fonts.css';
 
 
@@ -13,11 +12,6 @@ import './styles/base-page.css';
 import './App.css';
 
 const App: React.FC = () => {
-  // Initialize GenAI authentication
-  // useEffect(() => {
-  //   setupAuth();
-  // }, []);
-
   return (
     <>
       <Routes>

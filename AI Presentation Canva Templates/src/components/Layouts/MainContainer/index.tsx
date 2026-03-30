@@ -1,7 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useLocation } from 'react-router-dom';
 import Canvas from '../../Canvas/Canvas';
-import PreviewPanel from '../../Preview/PreviewPanel/index';
 import ChatGPTPreviewPanel from '../../Preview/ChatGPTPreviewPanel';
 import ToolbarContainer from '../../Toolbar/ToolbarContainer/index';
 import { useChatGPTPreview } from '@/contexts/ChatGPTPreviewContext';
@@ -27,33 +25,15 @@ interface CanvasData {
   elements?: ElementData[];
 }
 
-// All white canvas backgrounds
-const CANVAS_BACKGROUNDS: Array<Partial<CanvasData>> = [
-  { color: '#FFFFFF' },
-  { color: '#FFFFFF' },
-  { color: '#FFFFFF' },
-  { color: '#FFFFFF' },
-  { color: '#FFFFFF' },
-];
-
-// White color for new canvases
-const CANVAS_COLORS: string[] = [
-  '#FFFFFF', // White
-];
-
 interface MainContainerProps {
-  showPreviewPanel?: boolean; // Controls whether preview panel is shown (default: true)
-  customCanvasContent?: React.ReactNode; // Optional custom content to render on canvas instead of default
-  canvasType?: 'presentation' | 'doc' | 'instagram' | 'tiktok' | 'email'; // Canvas type for aspect ratio
+  customCanvasContent?: React.ReactNode;
+  canvasType?: 'presentation' | 'doc' | 'instagram' | 'tiktok' | 'email';
 }
 
 const MainContainer: React.FC<MainContainerProps> = ({
-  showPreviewPanel = true,
   customCanvasContent,
   canvasType,
 }) => {
-  const location = useLocation();
-  const isVideoView = location.pathname === '/video';
   const [isFromChatGPT, setIsFromChatGPT] = useState(false);
   const chatGPTPreview = useChatGPTPreview();
 
@@ -67,7 +47,6 @@ const MainContainer: React.FC<MainContainerProps> = ({
     }
   }, []);
 
-  // When from ChatGPT: show first slide as the main page (thumbnail being created into a page)
   const showSlideAsPage =
     isFromChatGPT &&
     chatGPTPreview?.hasData &&
@@ -75,91 +54,42 @@ const MainContainer: React.FC<MainContainerProps> = ({
     chatGPTPreview.loadedSlideCount >= 1;
   const firstSlideThumb = showSlideAsPage ? chatGPTPreview.pages[0].thumb : null;
 
-  const [canvases, setCanvases] = useState<CanvasData[]>([
+  const [canvases] = useState<CanvasData[]>([
     {
       id: 1,
       content: 'Slide 1 Content',
-      color: '#FFFFFF', // White
-      elements: [], // Removed all placeholder elements
+      color: '#FFFFFF',
+      elements: [],
     },
     {
       id: 2,
       content: 'Slide 2 Content',
-      color: '#FFFFFF', // White
+      color: '#FFFFFF',
     },
     {
       id: 3,
       content: 'Slide 3 Content',
-      color: '#FFFFFF', // White
+      color: '#FFFFFF',
     },
     {
       id: 4,
       content: 'Slide 4 Content',
-      color: '#FFFFFF', // White
+      color: '#FFFFFF',
     },
     {
       id: 5,
       content: 'Slide 5 Content',
-      color: '#FFFFFF', // White
+      color: '#FFFFFF',
     },
   ]);
 
-  const [activeCanvasId, setActiveCanvasId] = useState<number>(1);
+  const [activeCanvasId] = useState<number>(1);
   const [selectedElementType, setSelectedElementType] = useState<string | null>(null);
 
-  // Video timeline state
-  const [currentTime, setCurrentTime] = useState(0);
-  const [timelineDuration] = useState(60); // 60 seconds default
-
-  // Find the active canvas
   const activeCanvas = canvases.find(canvas => canvas.id === activeCanvasId) || canvases[0];
-
-  const handleCanvasSelect = (canvasId: number): void => {
-    setActiveCanvasId(canvasId);
-    // When changing canvases, reset selection
-    setSelectedElementType(null);
-  };
 
   const handleElementSelect = (elementType: string | null): void => {
     setSelectedElementType(elementType);
-  };
-
-  const handleAddCanvas = (): void => {
-    // Get highest ID to ensure unique IDs
-    const maxId = canvases.reduce((max, canvas) => Math.max(max, canvas.id), 0);
-    const newId = maxId + 1;
-
-    // Create new canvas with white background
-    const newCanvas: CanvasData = {
-      id: newId,
-      content: `Slide ${newId} Content`,
-      color: '#FFFFFF', // White
-    };
-
-    // Add to canvases array
-    setCanvases([...canvases, newCanvas]);
-
-    // Automatically select the new canvas
-    setActiveCanvasId(newId);
-    // Reset element selection
-    setSelectedElementType(null);
-  };
-
-  // Video timeline handlers
-  const handleTimeChange = (time: number) => {
-    setCurrentTime(time);
-  };
-
-  const handleClipSelect = (clip: any) => {
-    // Video clip selected
-  };
-
-  const handleClipUpdate = (clip: any) => {
-    // Video clip updated
-  };
-
-  const handleClipDelete = (clipId: string) => {
-    // Video clip deleted
   };
 
   return (
@@ -201,15 +131,6 @@ const MainContainer: React.FC<MainContainerProps> = ({
         {isFromChatGPT ? (
           <div className="preview-container chatgpt-preview-at-bottom">
             <ChatGPTPreviewPanel />
-          </div>
-        ) : showPreviewPanel ? (
-          <div className="preview-container">
-            <PreviewPanel
-              canvases={canvases as never[]}
-              activeCanvasId={activeCanvasId}
-              onCanvasSelect={handleCanvasSelect}
-              onAddCanvas={handleAddCanvas}
-            />
           </div>
         ) : null}
       </div>

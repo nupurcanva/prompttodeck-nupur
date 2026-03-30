@@ -1,49 +1,404 @@
-import { useState, useEffect, useRef, useLayoutEffect } from 'react'
+import { useState, useEffect, useRef, useLayoutEffect, useId } from 'react'
 import './App.css'
 
-function App() {
-  const [prompt, setPrompt] = useState('')
-  const [outlinePrompt, setOutlinePrompt] = useState('')
-  const [submittedPrompt, setSubmittedPrompt] = useState('') // Prompt user submitted - shown on next screen
-  const DECK_PROMPT = "Create a pitch deck for Deploy 2026" // From Figma - prompt that generated the outline
-  const [screen, setScreen] = useState('home') // 'home' | 'next' - ready for next screen
-  const [flowStep, setFlowStep] = useState('outline') // 'outline' | 'options' | 'create-from-existing'
-  const [widgetStep, setWidgetStep] = useState('options') // 'options' | 'create-from-existing' | 'generate-from-scratch' | 'generating' | 'remix'
-  const [loadedSlideCount, setLoadedSlideCount] = useState(0) // slides loaded in generating view
-  const [mainPreviewUnblurred, setMainPreviewUnblurred] = useState(false)
-  const [visiblePageSlotsCount, setVisiblePageSlotsCount] = useState(0) // page slots shown below (loading states)
-  const [preSelectedDesign, setPreSelectedDesign] = useState(null) // legacy / outline navigation
-  const [createExistingItem, setCreateExistingItem] = useState(null) // selected template or design in create-from-existing flow
-  /** 'preserve' | 'condense' — how to treat source content when generating from an existing design */
-  const [createExistingContentMode, setCreateExistingContentMode] = useState('preserve')
-  const [createExistingPickerOpen, setCreateExistingPickerOpen] = useState(false)
-  const createExistingPickerRef = useRef(null)
-  const chatScrollRef = useRef(null)
-  const canvaLatestSegmentRef = useRef(null)
-  const [pickerSearchQuery, setPickerSearchQuery] = useState('')
-  const [secondaryPanelLoading, setSecondaryPanelLoading] = useState(false)
-  const [secondaryLoadPhaseIndex, setSecondaryLoadPhaseIndex] = useState(0)
-  const secondaryLoadTimerRef = useRef(null)
-  const SECONDARY_LOAD_MESSAGES = ['Calling the tool', 'Called the tool', 'Talked to canva']
-  /** ~2.5s total before widget + Canva header appear (three phased lines). */
-  const SECONDARY_LOAD_PHASE_MS = 850
-  const SECONDARY_PANEL_LOAD_MS = SECONDARY_LOAD_PHASE_MS * SECONDARY_LOAD_MESSAGES.length
-  const [canvaThread, setCanvaThread] = useState([]) // { id, type: 'chooser' | 'widget', variant?, cfeSnapshot?, outlineToneSnap?, remixSnap? }
-  const [createTab, setCreateTab] = useState('brand-template') // 'brand-template' | 'your-designs' | 'search'
-  const SHOW_SEARCH_BY_URL_TAB = false // Set to true to restore Search by URL tab
-  const [searchQuery, setSearchQuery] = useState('')
-  const [searchSubmitted, setSearchSubmitted] = useState(false) // true when user pressed Search or Enter
-  const [searchByNameNoMatch, setSearchByNameNoMatch] = useState(false) // user asked for design by name, 0 results
-  const [urlSearchQuery, setUrlSearchQuery] = useState('')
-  const [previewItem, setPreviewItem] = useState(null)
-  const [previewFromPicker, setPreviewFromPicker] = useState(false)
-  const [noUserBrandTemplates, setNoUserBrandTemplates] = useState(false)
-  const [remixItem, setRemixItem] = useState(null) // design selected for Edit with AI
-  const [chooseSlidesItem, setChooseSlidesItem] = useState(null) // design for choose-slides fullscreen
-  const [selectedPageIds, setSelectedPageIds] = useState(new Set()) // page IDs selected in choose-slides
-  const [editDocumentFullscreenOpen, setEditDocumentFullscreenOpen] = useState(false)
-  const USE_INLINE_EDIT_DOCUMENT = false // Set true to restore inline Enhance flow
-  const [remixContent, setRemixContent] = useState(`Deploy 2026 — Pitch Deck
+/**
+ * Shared Canva widget handoff: pulsing dot + status text that steps through {@link CANVA_WIDGET_LOAD_MESSAGES},
+ * then the thread swaps in the real widget. Use {@link CANVA_WIDGET_LOAD_TOTAL_MS} with runAfterSecondaryLoad.
+ */
+const CANVA_WIDGET_LOAD_MESSAGES = ['Calling the tool', 'Called the tool', 'Talked to Canva']
+const CANVA_WIDGET_LOAD_PHASE_MS = 850
+const CANVA_WIDGET_LOAD_TOTAL_MS = CANVA_WIDGET_LOAD_PHASE_MS * CANVA_WIDGET_LOAD_MESSAGES.length
+const WIZARD_CONTENT_OPTIONS = [
+  {
+    value: 'preserve-chat',
+    label: 'Preserve content',
+    menuTitle: 'Preserve content',
+    menuDescription: 'Use this chat conversation as-is',
+  },
+  {
+    value: 'generate-outline',
+    label: 'Generate outline',
+    menuTitle: 'Generate outline',
+    menuDescription: 'Review content before generating',
+  },
+]
+
+/** When "Start fresh" — how brand/style is applied (Prompt-to-Deck scratch flow) */
+const WIZARD_SCRATCH_STYLE_OPTIONS = [
+  { value: 'no-style-preference', label: 'No style preference' },
+  { value: 'select-style', label: 'Select a Style' },
+  { value: 'apply-brand', label: 'Apply Brand' },
+  { value: 'reference-design', label: 'Reference an existing design' },
+]
+
+/** Guided presentation workflow — style thumbnails (Figma 811:11802) */
+const WIZARD_STYLE_CARD_ROWS = [
+  [
+    { id: 'minimalist', label: 'Minimalist', img1: '/figma-assets/39b353c0d626287203a3c8b4bbda43c3f9d42798.png', img2: '/figma-assets/83631a4ea4104a3084b9ef24a1c375e46a6f17a4.png' },
+    { id: 'playful', label: 'Playful', img1: '/figma-assets/8857266ec56022d36fa6e514fceb6633ad926fa1.png', img2: '/figma-assets/8e784c2d3ac2d4ee3bed5c66e45c43ce9a83413b.png' },
+    { id: 'organic', label: 'Organic', img1: '/figma-assets/8cccdbc5c30b1f6c3704bf0b482d343bb35c0529.png', img2: '/figma-assets/0c87ef390c74d0f1cd5815abafea49d01ec3158d.png' },
+    { id: 'modular', label: 'Modular', img1: '/figma-assets/c0d4f9ccf4d88e46dbf31de5de984e35303a929a.png', img2: '/figma-assets/3346061c861059292f06338d9efb47cf9a6e2db0.png' },
+  ],
+  [
+    { id: 'elegant', label: 'Elegant', img1: '/figma-assets/c5e3ff1d3bda698b2f58f5614fdf51faeacaf58d.png', img2: '/figma-assets/94dcac9b39edae527c8cc5fffd6162371a0a2053.png' },
+    { id: 'digital', label: 'Digital', img1: '/figma-assets/4b6920a78218229fbc302736dffe68cd2826b167.png', img2: '/figma-assets/c574450832e234e9d26a43f16e3cb96e27ecb19f.png' },
+    { id: 'geometric', label: 'Geometric', img1: '/figma-assets/6b4dad088a58c9a30c533cdf562f9961afeba270.png', img2: '/figma-assets/ad8814daa1713ab187151f6e2f16f119cadbe0ff.png' },
+    { id: 'surprise-me', label: 'Surprise me', surprise: true },
+  ],
+]
+
+const WIZARD_STYLE_CARDS_FLAT = WIZARD_STYLE_CARD_ROWS.flat()
+
+/** Style strip order in Widget 1 — Figma Prompt-to-Deck sales 1390:75492 */
+const WIZARD_WIDGET1_STYLE_ORDER_IDS = [
+  'minimalist',
+  'playful',
+  'organic',
+  'geometric',
+  'modular',
+  'elegant',
+  'digital',
+  'surprise-me',
+]
+
+const WIZARD_WIDGET1_STYLE_CARDS_ORDERED = WIZARD_WIDGET1_STYLE_ORDER_IDS.map((id) =>
+  WIZARD_STYLE_CARDS_FLAT.find((c) => c.id === id)
+).filter(Boolean)
+
+/** Brand kit cards (Figma 811:12755) */
+const WIZARD_BRAND_KIT_CARDS = [
+  {
+    id: 'byte',
+    label: 'Byte',
+    thumbClass: 'wizard-brand-kit-thumb--byte',
+    palette: ['#0122ff', '#f6f5f1', '#00ff6d', '#010002'],
+    img: '/figma-assets/15bf176e152a4fa188ca16f9465422b0aa8c4101.png',
+  },
+  {
+    id: 'buller-bread',
+    label: 'Buller & Bread',
+    thumbClass: 'wizard-brand-kit-thumb--buller',
+    palette: ['#d1653e', '#e9c2c1', '#ffffff'],
+    img: '/figma-assets/86f51f73f25bd9ce4708105fe492524057965ddb.png',
+  },
+  {
+    id: 'hatoya',
+    label: 'Hatoya',
+    thumbClass: 'wizard-brand-kit-thumb--hatoya',
+    palette: ['#3b5803', '#5a991b', '#81b522', '#d8ecb3'],
+    img: '/figma-assets/32d512bb97236032d207ad10dbd34283f3f6fcf9.png',
+  },
+  {
+    id: 'handcraft',
+    label: 'Handcraft',
+    thumbClass: 'wizard-brand-kit-thumb--handcraft',
+    palette: ['#443522', '#7a3c1a', '#f2ecdf'],
+    img: '/figma-assets/c66e8241e2ef31d495992d876618b6e6d6527017.png',
+  },
+  {
+    id: 'lumina',
+    label: 'Lumina',
+    thumbClass: 'wizard-brand-kit-thumb--lumina',
+    palette: ['#ff6b6b', '#ffd93d', '#6bcb77', '#4d96ff'],
+    img: null,
+  },
+  {
+    id: 'slate',
+    label: 'Slate',
+    thumbClass: 'wizard-brand-kit-thumb--slate',
+    palette: ['#2d3436', '#636e72', '#b2bec3', '#dfe6e9'],
+    img: null,
+  },
+  {
+    id: 'aurora',
+    label: 'Aurora',
+    thumbClass: 'wizard-brand-kit-thumb--aurora',
+    palette: ['#6c5ce7', '#a29bfe', '#fd79a8', '#fdcb6e'],
+    img: null,
+  },
+  {
+    id: 'grove',
+    label: 'Grove',
+    thumbClass: 'wizard-brand-kit-thumb--grove',
+    palette: ['#00b894', '#00cec9', '#55efc4', '#ffeaa7'],
+    img: null,
+  },
+]
+
+/** Per-kit brand templates. Buller & Bread intentionally empty to show the empty state. */
+const BRAND_KIT_TEMPLATES = {
+  'byte': [
+    { id: 'byte-1', name: 'Byte Pitch Deck', type: 'Brand Template' },
+    { id: 'byte-2', name: 'Byte All Hands', type: 'Brand Template' },
+    { id: 'byte-3', name: 'Byte Product Overview', type: 'Brand Template' },
+  ],
+  'buller-bread': [],
+  'hatoya': [
+    { id: 'hatoya-1', name: 'Hatoya Brand Guidelines', type: 'Brand Template' },
+    { id: 'hatoya-2', name: 'Hatoya Annual Report', type: 'Brand Template' },
+  ],
+  'handcraft': [
+    { id: 'handcraft-1', name: 'Handcraft Portfolio', type: 'Brand Template' },
+    { id: 'handcraft-2', name: 'Handcraft Proposal', type: 'Brand Template' },
+  ],
+  'lumina': [
+    { id: 'lumina-1', name: 'Lumina Pitch Deck', type: 'Brand Template' },
+    { id: 'lumina-2', name: 'Lumina Campaign Brief', type: 'Brand Template' },
+  ],
+  'slate': [
+    { id: 'slate-1', name: 'Slate Executive Summary', type: 'Brand Template' },
+    { id: 'slate-2', name: 'Slate Quarterly Review', type: 'Brand Template' },
+  ],
+  'aurora': [
+    { id: 'aurora-1', name: 'Aurora Brand Deck', type: 'Brand Template' },
+    { id: 'aurora-2', name: 'Aurora Product Launch', type: 'Brand Template' },
+  ],
+  'grove': [
+    { id: 'grove-1', name: 'Grove Impact Report', type: 'Brand Template' },
+    { id: 'grove-2', name: 'Grove Strategy Overview', type: 'Brand Template' },
+  ],
+}
+
+function findStyleCardLabel(styleId) {
+  for (const row of WIZARD_STYLE_CARD_ROWS) {
+    const c = row.find((x) => x.id === styleId)
+    if (c) return c.label
+  }
+  return styleId
+}
+
+function findBrandKitLabel(kitId) {
+  return WIZARD_BRAND_KIT_CARDS.find((k) => k.id === kitId)?.label ?? kitId
+}
+
+const SCRATCH_OUTLINE_CONTENT_OPTIONS = [
+  { value: 'concise', label: 'Concise' },
+  { value: 'detailed', label: 'Detailed' },
+  { value: 'extensive', label: 'Extensive' },
+]
+
+const SCRATCH_OUTLINE_LENGTH_OPTIONS = [
+  { value: 'short', label: 'Short (~5 slides)' },
+  { value: 'standard', label: 'Standard (~8 slides)' },
+  { value: 'full', label: 'Full deck' },
+]
+
+function stubCondenseFromChat(text) {
+  const t = text.trim()
+  if (!t) return ''
+  if (t.length <= 280) return t
+  const cut = t.slice(0, 280)
+  const lastSpace = cut.lastIndexOf(' ')
+  return (lastSpace > 120 ? cut.slice(0, lastSpace) : cut).trim() + '…'
+}
+
+/** Custom listbox menu — solid white panel; optional two-line rows in the open menu only. */
+function Widget1FigmaDropdown({
+  id,
+  value,
+  onChange,
+  options,
+  placeholder,
+  multiline,
+  hideSecondaryOnTrigger,
+}) {
+  const [open, setOpen] = useState(false)
+  const rootRef = useRef(null)
+  const listId = useId()
+
+  useEffect(() => {
+    if (!open) return
+    const onDoc = (e) => {
+      if (rootRef.current && !rootRef.current.contains(e.target)) setOpen(false)
+    }
+    const onKey = (e) => {
+      if (e.key === 'Escape') setOpen(false)
+    }
+    document.addEventListener('mousedown', onDoc)
+    document.addEventListener('keydown', onKey)
+    return () => {
+      document.removeEventListener('mousedown', onDoc)
+      document.removeEventListener('keydown', onKey)
+    }
+  }, [open])
+
+  const selected = options.find((o) => o.value === value)
+  const showSecondarySelected =
+    multiline && selected?.menuDescription && !hideSecondaryOnTrigger
+
+  return (
+    <div className="widget1-dropdown" ref={rootRef}>
+      <button
+        type="button"
+        id={id}
+        className="widget1-dropdown-trigger"
+        aria-haspopup="listbox"
+        aria-expanded={open}
+        aria-controls={open ? listId : undefined}
+        onClick={() => setOpen((o) => !o)}
+      >
+        <span
+          className={`widget1-dropdown-value${showSecondarySelected ? ' widget1-dropdown-value--twoline' : ''}`}
+        >
+          {selected ? (
+            <>
+              <span className="widget1-dropdown-value-primary">{selected.menuTitle ?? selected.label}</span>
+              {showSecondarySelected ? (
+                <span className="widget1-dropdown-value-secondary">{selected.menuDescription}</span>
+              ) : null}
+            </>
+          ) : (
+            <span className="widget1-dropdown-placeholder">{placeholder}</span>
+          )}
+        </span>
+        <span className="widget1-dropdown-chevron" aria-hidden>
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+            <path
+              d="M6 9l6 6 6-6"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
+        </span>
+      </button>
+      {open ? (
+        <div className="widget1-dropdown-panel" id={listId} role="listbox" aria-labelledby={id}>
+          {options.map((opt) => {
+            const isSelected = value === opt.value
+            const twoLine = multiline && opt.menuDescription
+            return (
+              <button
+                key={opt.value}
+                type="button"
+                role="option"
+                aria-selected={isSelected}
+                className={`widget1-dropdown-item${twoLine ? ' widget1-dropdown-item--twoline' : ' widget1-dropdown-item--single'}${
+                  isSelected ? ' widget1-dropdown-item--current' : ''
+                }`}
+                onClick={() => {
+                  onChange(opt.value)
+                  setOpen(false)
+                }}
+              >
+                <span className="widget1-dropdown-item-primary">{opt.menuTitle ?? opt.label}</span>
+                {twoLine ? (
+                  <span className="widget1-dropdown-item-secondary">{opt.menuDescription}</span>
+                ) : null}
+              </button>
+            )
+          })}
+        </div>
+      ) : null}
+    </div>
+  )
+}
+
+/** Brand-template picker dropdown for Widget 1 reference-template row */
+function Widget1TemplatePicker({ id, value, onChange, templates }) {
+  const [open, setOpen] = useState(false)
+  const [localSearch, setLocalSearch] = useState('')
+  const rootRef = useRef(null)
+
+  useEffect(() => {
+    if (!open) return
+    const onDoc = (e) => {
+      if (rootRef.current && !rootRef.current.contains(e.target)) setOpen(false)
+    }
+    const onKey = (e) => { if (e.key === 'Escape') setOpen(false) }
+    document.addEventListener('mousedown', onDoc)
+    document.addEventListener('keydown', onKey)
+    return () => {
+      document.removeEventListener('mousedown', onDoc)
+      document.removeEventListener('keydown', onKey)
+    }
+  }, [open])
+
+  const selected = templates.find((t) => String(t.id) === String(value))
+  const filtered = localSearch.trim()
+    ? templates.filter((t) => t.name.toLowerCase().includes(localSearch.toLowerCase()))
+    : templates
+
+  return (
+    <div className="widget1-template-picker" ref={rootRef}>
+      <button
+        type="button"
+        id={id}
+        className="widget1-dropdown-trigger"
+        aria-haspopup="listbox"
+        aria-expanded={open}
+        onClick={() => setOpen((o) => !o)}
+      >
+        <span className={selected ? 'widget1-dropdown-value-primary' : 'widget1-dropdown-placeholder'}>
+          {selected ? selected.name : 'Select'}
+        </span>
+        <span className="widget1-dropdown-chevron" aria-hidden>
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+            <path d="M6 9l6 6 6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        </span>
+      </button>
+      {open ? (
+        <div className="widget1-dropdown-panel widget1-template-picker-panel">
+          <div className="widget1-picker-header">
+            <span className="widget1-picker-header-label">Brand Template ({templates.length})</span>
+          </div>
+          <div className="widget1-picker-search">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+              <circle cx="11" cy="11" r="8" /><path d="m21 21-4.3-4.3" />
+            </svg>
+            <input
+              type="text"
+              className="widget1-picker-search-input"
+              value={localSearch}
+              onChange={(e) => setLocalSearch(e.target.value)}
+              placeholder="Search brand templates..."
+              onClick={(e) => e.stopPropagation()}
+            />
+          </div>
+          <div className="widget1-picker-list" role="listbox">
+            {filtered.length === 0 ? (
+              <p style={{ fontSize: 13, color: '#8f8f8f', textAlign: 'center', padding: '16px 0', margin: 0 }}>
+                No results for &ldquo;{localSearch}&rdquo;
+              </p>
+            ) : filtered.map((t) => {
+              const isSelected = String(t.id) === String(value)
+              return (
+                <div
+                  key={t.id}
+                  role="option"
+                  aria-selected={isSelected}
+                  className={`widget1-picker-item${isSelected ? ' widget1-picker-item--selected' : ''}`}
+                  onClick={() => { onChange(String(t.id)); setOpen(false); setLocalSearch('') }}
+                >
+                  <div className="widget1-picker-thumb-wrap">
+                    <div className="widget1-picker-thumb">
+                      {t.thumb ? <img src={t.thumb} alt="" /> : null}
+                    </div>
+                    {isSelected && (
+                      <div className="widget1-picker-thumb-badge" aria-hidden>
+                        <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                          <polyline points="20 6 9 17 4 12" />
+                        </svg>
+                      </div>
+                    )}
+                  </div>
+                  <div className="widget1-picker-item-info">
+                    <p className="widget1-picker-item-name">{t.name}</p>
+                    <p className="widget1-picker-item-type">{t.type}</p>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      ) : null}
+    </div>
+  )
+}
+
+const DEFAULT_REMIX_DOCUMENT = `Deploy 2026 — Pitch Deck
 
 Cover
 Opening slide with event branding, date, and venue. Establish the Deploy 2026 identity and set the tone for the entire presentation. Event logo and tagline, date and location, presenter name and title.
@@ -67,7 +422,73 @@ Traction — Metrics & milestones
 Share progress, validation, and proof points to build credibility. Use concrete numbers and milestones to demonstrate momentum. Key metrics — users, revenue, growth. Customer logos and testimonials, partnerships and milestones, recognition and awards.
 
 Ask — Next steps & call to action
-Clear recommendations and what you need from the audience. Make the ask specific, actionable, and easy to say yes to. Funding amount and use of funds if applicable, partnership or pilot opportunities, next meeting or follow-up, contact information.`)
+Clear recommendations and what you need from the audience. Make the ask specific, actionable, and easy to say yes to. Funding amount and use of funds if applicable, partnership or pilot opportunities, next meeting or follow-up, contact information.`
+
+function App() {
+  const [prompt, setPrompt] = useState('')
+  /** Step 1: natural-language capture before configuration */
+  const [capturePrompt, setCapturePrompt] = useState('')
+  const [submittedPrompt, setSubmittedPrompt] = useState('') // Prompt user submitted - shown on next screen
+  /** 1 = home capture, 3 = conversation + Canva stack */
+  const [wizardStep, setWizardStep] = useState(1)
+  const [contentChoice, setContentChoice] = useState('')
+  /** When starting fresh: style mode from WIZARD_SCRATCH_STYLE_OPTIONS */
+  const [wizardScratchStyleMode, setWizardScratchStyleMode] = useState('apply-brand')
+  /** When mode is apply-brand / reference-template: which brand template (id string) */
+  const [wizardReferenceTemplateId, setWizardReferenceTemplateId] = useState('byte-1')
+  /** Content path “Reference a brand template” — team template to start from */
+  const [wizardChosenBrandTemplateId, setWizardChosenBrandTemplateId] = useState('')
+  /** Brand template used only as visual reference when mode is reference-template */
+  const [scratchStyleBrandTemplate, setScratchStyleBrandTemplate] = useState(null)
+  /** Mirrors wizard choice in Canva scratch widget: 'select-style' | 'brand-kit' | 'reference-template' | null */
+  const [scratchStyleMode, setScratchStyleMode] = useState(null)
+  /** Picked presentation style (Figma style cards) */
+  const [scratchSelectedStyle, setScratchSelectedStyle] = useState(null)
+  /** Picked brand kit card */
+  const [scratchSelectedBrandKit, setScratchSelectedBrandKit] = useState(null)
+  const [wizardSelectedStyleId, setWizardSelectedStyleId] = useState('')
+  const [wizardSelectedBrandKitId, setWizardSelectedBrandKitId] = useState('byte')
+  const [screen, setScreen] = useState('home') // 'home' | 'next' - ready for next screen
+  const [flowStep, setFlowStep] = useState('options') // 'options' | 'create-from-existing'
+  const [widgetStep, setWidgetStep] = useState('options') // 'options' | 'widget-1' | 'create-from-existing' | 'generate-from-scratch' | 'generating' | 'remix'
+  const [loadedSlideCount, setLoadedSlideCount] = useState(0) // slides loaded in generating view
+  const [mainPreviewUnblurred, setMainPreviewUnblurred] = useState(false)
+  const [visiblePageSlotsCount, setVisiblePageSlotsCount] = useState(0) // page slots shown below (loading states)
+  const [preSelectedDesign, setPreSelectedDesign] = useState(null) // legacy / outline navigation
+  const [createExistingItem, setCreateExistingItem] = useState(null) // selected template or design in create-from-existing flow
+  /** 'preserve' | 'condense' | 'generate-outline' — how chat content is used with the design */
+  const [createExistingContentMode, setCreateExistingContentMode] = useState('preserve')
+  const [createExistingPickerOpen, setCreateExistingPickerOpen] = useState(false)
+  const createExistingPickerRef = useRef(null)
+  /** Fallback when `submittedPrompt` is empty so Widget 1 Continue still runs (e.g. race or alternate entry). */
+  const lastHomePromptRef = useRef('')
+  const chatScrollRef = useRef(null)
+  const canvaLatestSegmentRef = useRef(null)
+  const wizardStyleCarouselRef = useRef(null)
+  const wizardBrandKitCarouselRef = useRef(null)
+  const [pickerSearchQuery, setPickerSearchQuery] = useState('')
+  const [secondaryPanelLoading, setSecondaryPanelLoading] = useState(false)
+  const [secondaryLoadPhaseIndex, setSecondaryLoadPhaseIndex] = useState(0)
+  const secondaryLoadTimerRef = useRef(null)
+  const SECONDARY_LOAD_MESSAGES = CANVA_WIDGET_LOAD_MESSAGES
+  const SECONDARY_LOAD_PHASE_MS = CANVA_WIDGET_LOAD_PHASE_MS
+  const SECONDARY_PANEL_LOAD_MS = CANVA_WIDGET_LOAD_TOTAL_MS
+  const [canvaThread, setCanvaThread] = useState([{ id: 'widget-1-default', type: 'widget', variant: 'widget-1' }]) // { id, type: 'chooser' | 'widget', variant?, cfeSnapshot?, outlineToneSnap?, remixSnap? }
+  const [createTab, setCreateTab] = useState('brand-template') // 'brand-template' | 'your-designs' | 'search'
+  const SHOW_SEARCH_BY_URL_TAB = false // Set to true to restore Search by URL tab
+  const [searchQuery, setSearchQuery] = useState('')
+  const [searchSubmitted, setSearchSubmitted] = useState(false) // true when user pressed Search or Enter
+  const [searchByNameNoMatch, setSearchByNameNoMatch] = useState(false) // user asked for design by name, 0 results
+  const [urlSearchQuery, setUrlSearchQuery] = useState('')
+  const [previewItem, setPreviewItem] = useState(null)
+  const [previewFromPicker, setPreviewFromPicker] = useState(false)
+  const [noUserBrandTemplates, setNoUserBrandTemplates] = useState(false)
+  const [remixItem, setRemixItem] = useState(null) // design selected for Edit with AI
+  const [chooseSlidesItem, setChooseSlidesItem] = useState(null) // design for choose-slides fullscreen
+  const [selectedPageIds, setSelectedPageIds] = useState(new Set()) // page IDs selected in choose-slides
+  const [editDocumentFullscreenOpen, setEditDocumentFullscreenOpen] = useState(false)
+  const USE_INLINE_EDIT_DOCUMENT = false // Set true to restore inline Enhance flow
+  const [remixContent, setRemixContent] = useState(DEFAULT_REMIX_DOCUMENT)
 
   // Clear search only when user clicks a tab (not when we navigate from prompt)
   const handleTabClick = (tab) => {
@@ -78,6 +499,10 @@ Clear recommendations and what you need from the audience. Make the ask specific
   }
   const [urlSearchResult, setUrlSearchResult] = useState(null)
   const [outlineTone, setOutlineTone] = useState(null) // 'casual' | 'balanced' | 'playful' | null = none selected
+  const [widget1TemplateSearch, setWidget1TemplateSearch] = useState('')
+  const [wizardApplyBrandTab, setWizardApplyBrandTab] = useState('brand-template')
+  const [scratchOutlineContent, setScratchOutlineContent] = useState('detailed')
+  const [scratchOutlineLength, setScratchOutlineLength] = useState('standard')
 
   // Outline built out for Generate from scratch - matches Figma node 810-7610
   const generateFromScratchOutline = [
@@ -258,6 +683,13 @@ Clear recommendations and what you need from the audience. Make the ask specific
     }
   }
 
+  const scrollWizardTileCarousel = (ref) => {
+    const el = ref.current
+    if (!el) return
+    const step = Math.min(320, Math.max(180, el.clientWidth * 0.72))
+    el.scrollBy({ left: step, behavior: 'smooth' })
+  }
+
   const newCanvaThreadId = () => `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`
 
   const snapshotPreviousTailWidget = (thread) => {
@@ -273,6 +705,15 @@ Clear recommendations and what you need from the audience. Make the ask specific
     }
     if (w.variant === 'generate-from-scratch') {
       enriched.outlineToneSnap = outlineTone
+      enriched.scratchContentModeSnap = w.scratchContentMode ?? createExistingContentMode
+    }
+    if (w.variant === 'widget-1') {
+      enriched.widget1Snap = {
+        designMode: wizardScratchStyleMode,
+        contentChoice,
+        brandTemplateChoiceId:
+          contentChoice === 'reference-brand-template' ? wizardChosenBrandTemplateId : undefined,
+      }
     }
     if (w.variant === 'remix' && remixItem) {
       enriched.remixSnap = {
@@ -300,12 +741,24 @@ Clear recommendations and what you need from the audience. Make the ask specific
   useEffect(() => () => clearSecondaryLoadTimer(), [])
 
   useEffect(() => {
-    if (flowStep === 'outline') {
+    if (wizardScratchStyleMode === 'brand-kit' && wizardSelectedBrandKitId === 'none') {
+      setWizardSelectedBrandKitId('')
+    }
+  }, [wizardScratchStyleMode, wizardSelectedBrandKitId])
+
+  // When user switches to a different brand kit, clear the previously chosen brand template
+  useEffect(() => {
+    setWizardReferenceTemplateId('')
+    setWizardApplyBrandTab('brand-template')
+  }, [wizardSelectedBrandKitId])
+
+  useEffect(() => {
+    if (wizardStep < 3) {
       setCanvaThread([])
       setSecondaryPanelLoading(false)
       setRemixItem(null)
     }
-  }, [flowStep])
+  }, [wizardStep])
 
   useEffect(() => {
     const widgets = canvaThread.filter((e) => e.type === 'widget')
@@ -318,6 +771,7 @@ Clear recommendations and what you need from the audience. Make the ask specific
     else if (tail.variant === 'create-from-existing') setWidgetStep('create-from-existing')
     else if (tail.variant === 'generating') setWidgetStep('generating')
     else if (tail.variant === 'remix') setWidgetStep('remix')
+    else if (tail.variant === 'widget-1') setWidgetStep('widget-1')
   }, [canvaThread])
 
   useEffect(() => {
@@ -382,20 +836,140 @@ Clear recommendations and what you need from the audience. Make the ask specific
     }
   }
 
-  const handleOutlineSubmit = (e) => {
+  const applyContentChoiceToState = (cc, chatText) => {
+    if (cc === 'preserve-chat') {
+      setCreateExistingContentMode('preserve')
+      setRemixContent(chatText)
+      return
+    }
+    if (cc === 'reference-brand-template') {
+      setCreateExistingContentMode('preserve')
+      setRemixContent(chatText)
+      return
+    }
+    if (cc === 'condense-outline') {
+      setCreateExistingContentMode('condense')
+      setRemixContent(stubCondenseFromChat(chatText))
+      return
+    }
+    setCreateExistingContentMode('generate-outline')
+    setRemixContent(DEFAULT_REMIX_DOCUMENT)
+  }
+
+  const handleCaptureSubmit = (e) => {
     e.preventDefault()
-    const text = outlinePrompt.trim()
+    const text = capturePrompt.trim()
     if (!text) return
+    lastHomePromptRef.current = text
     setSubmittedPrompt(text)
-    const result = processTemplateDesignPrompt(text)
-    navigateToTemplateDesign(text, result)
-    setOutlinePrompt('')
+    setCapturePrompt('')
+    setContentChoice('')
+    setWizardScratchStyleMode('apply-brand')
+    setWizardReferenceTemplateId('byte-1')
+    setWizardChosenBrandTemplateId('')
+    setScratchStyleBrandTemplate(null)
+    setScratchStyleMode(null)
+    setScratchSelectedStyle(null)
+    setScratchSelectedBrandKit(null)
+    setWizardSelectedStyleId('')
+    setWizardSelectedBrandKitId('byte')
+    setCreateExistingContentMode('preserve')
+    setScratchOutlineContent('detailed')
+    setScratchOutlineLength('standard')
+    setWizardStep(3)
+    setCanvaThread([])
+    runAfterSecondaryLoad(() => {
+      setCanvaThread([{ id: newCanvaThreadId(), type: 'widget', variant: 'widget-1' }])
+    }, { clearRemix: false })
+  }
+
+  const widget1DesignIncomplete =
+    !wizardScratchStyleMode ||
+    (wizardScratchStyleMode === 'apply-brand' && !wizardSelectedBrandKitId) ||
+    (wizardScratchStyleMode === 'select-style' && !wizardSelectedStyleId) ||
+    (wizardScratchStyleMode === 'reference-design' && !wizardReferenceTemplateId)
+
+  const widget1ContinueDisabled = widget1DesignIncomplete
+
+  const handleWizardContinue = (contentChoiceArg) => {
+    const activeContentChoice = contentChoiceArg ?? contentChoice
+    const chatText = submittedPrompt.trim() || lastHomePromptRef.current.trim()
+    if (!chatText || widget1DesignIncomplete) return
+    setContentChoice(activeContentChoice)
+    setNoUserBrandTemplates(false)
+    applyContentChoiceToState(activeContentChoice, chatText)
+    setWizardStep(3)
+    setPreSelectedDesign(null)
+
+    setScratchStyleMode(wizardScratchStyleMode)
+    if (wizardScratchStyleMode === 'apply-brand') {
+      const kitTemplates = BRAND_KIT_TEMPLATES[wizardSelectedBrandKitId] || []
+      const refTemplate = kitTemplates.find(t => t.id === wizardReferenceTemplateId) ?? null
+      setScratchStyleBrandTemplate(refTemplate)
+      setScratchSelectedBrandKit({
+        id: wizardSelectedBrandKitId,
+        label: findBrandKitLabel(wizardSelectedBrandKitId),
+      })
+      setScratchSelectedStyle(null)
+    } else if (wizardScratchStyleMode === 'select-style' && wizardSelectedStyleId) {
+      setScratchSelectedStyle({
+        id: wizardSelectedStyleId,
+        label: findStyleCardLabel(wizardSelectedStyleId),
+      })
+      setScratchStyleBrandTemplate(null)
+      setScratchSelectedBrandKit(null)
+    } else {
+      setScratchStyleBrandTemplate(null)
+      setScratchSelectedStyle(null)
+      setScratchSelectedBrandKit(null)
+    }
+    setFlowStep('options')
+    setCreateExistingItem(null)
+
+    if (activeContentChoice === 'preserve-chat') {
+      runAfterSecondaryLoad(() => {
+        setLoadedSlideCount(0)
+        setMainPreviewUnblurred(false)
+        setVisiblePageSlotsCount(0)
+        setCanvaThread((t) => {
+          const withSnap = snapshotPreviousTailWidget(t)
+          return [...withSnap, { id: newCanvaThreadId(), type: 'widget', variant: 'generating' }]
+        })
+      })
+      return
+    }
+    if (activeContentChoice === 'generate-outline') {
+      runAfterSecondaryLoad(() => {
+        setCreateExistingContentMode('generate-outline')
+        setRemixContent(DEFAULT_REMIX_DOCUMENT)
+        setCanvaThread((t) => {
+          const withSnap = snapshotPreviousTailWidget(t)
+          return [
+            ...withSnap,
+            {
+              id: newCanvaThreadId(),
+              type: 'widget',
+              variant: 'generate-from-scratch',
+              scratchContentMode: 'generate-outline',
+            },
+          ]
+        })
+      })
+      return
+    }
+    runAfterSecondaryLoad(() => {
+      setCanvaThread((t) => {
+        const withSnap = snapshotPreviousTailWidget(t)
+        return [...withSnap, { id: newCanvaThreadId(), type: 'widget', variant: 'generate-from-scratch' }]
+      })
+    })
   }
 
   const handleSubmit = (e) => {
     e.preventDefault()
     const text = prompt.trim()
     if (!text) return
+    lastHomePromptRef.current = text
     setSubmittedPrompt(text)
     const result = processTemplateDesignPrompt(text)
     if (result.foundDesign || result.explicitName || result.intentUserDesign) {
@@ -443,13 +1017,60 @@ Clear recommendations and what you need from the audience. Make the ask specific
   }
 
   const handleGenerateDesign = () => {
+    const widgets = canvaThread.filter((e) => e.type === 'widget')
+    const tail = widgets[widgets.length - 1]
+
+    // Create-from-existing: "Generate outline from chat" → open the outline (scratch) step first.
+    if (tail?.variant === 'create-from-existing' && createExistingContentMode === 'generate-outline') {
+      const chatText = submittedPrompt.trim()
+      if (chatText) applyContentChoiceToState('generate-outline', chatText)
+      else {
+        setCreateExistingContentMode('generate-outline')
+        setRemixContent(DEFAULT_REMIX_DOCUMENT)
+      }
+      setFlowStep('options')
+      runAfterSecondaryLoad(() => {
+        setCreateExistingContentMode('generate-outline')
+        setRemixContent(DEFAULT_REMIX_DOCUMENT)
+        setCanvaThread((t) => {
+          const withSnap = snapshotPreviousTailWidget(t)
+          return [
+            ...withSnap,
+            {
+              id: newCanvaThreadId(),
+              type: 'widget',
+              variant: 'generate-from-scratch',
+              scratchContentMode: 'generate-outline',
+            },
+          ]
+        })
+      })
+      return
+    }
+
+    // Scratch outline step (Widget 1 → outline): Generate design → live generation (same loading handoff as other widgets).
+    const onScratchOutlineStep =
+      tail?.variant === 'generate-from-scratch' &&
+      (tail.scratchContentMode === 'generate-outline' || createExistingContentMode === 'generate-outline')
+    if (onScratchOutlineStep) {
+      runAfterSecondaryLoad(() => {
+        setCanvaThread((t) => {
+          const withSnap = snapshotPreviousTailWidget(t)
+          return [...withSnap, { id: newCanvaThreadId(), type: 'widget', variant: 'generating' }]
+        })
+      })
+      return
+    }
+
     clearSecondaryLoadTimer()
+    setSecondaryPanelLoading(false)
     setLoadedSlideCount(0)
     setMainPreviewUnblurred(false)
     setVisiblePageSlotsCount(0)
-    runAfterSecondaryLoad(() => {
-      setCanvaThread((t) => [...t, { id: newCanvaThreadId(), type: 'widget', variant: 'generating' }])
-    }, { clearRemix: false })
+    setCanvaThread((t) => {
+      const withSnap = snapshotPreviousTailWidget(t)
+      return [...withSnap, { id: newCanvaThreadId(), type: 'widget', variant: 'generating' }]
+    })
   }
 
   const generatingPages = remixItem?.pages || createExistingItem?.pages || createPages()
@@ -581,22 +1202,48 @@ Clear recommendations and what you need from the audience. Make the ask specific
     </div>
   )
 
+  const renderCanvaWidgetLoadingBody = () => (
+    <div
+      className="canva-secondary-loading-chat"
+      role="status"
+      aria-live="polite"
+      aria-label={SECONDARY_LOAD_MESSAGES[secondaryLoadPhaseIndex]}
+    >
+      <span className="chatgpt-loading-dot" aria-hidden />
+      <span className="canva-secondary-loading-chat-message">
+        {SECONDARY_LOAD_MESSAGES[secondaryLoadPhaseIndex]}
+      </span>
+    </div>
+  )
+
+  /** Full thread row during widget handoff: pulsing dot + cycling status only (no Canva header or action icons). */
+  const renderCanvaWidgetLoadingSegment = () => (
+    <div className="canva-thread-segment canva-thread-segment--latest">
+      <div className="canva-tool-thread-block">{renderCanvaWidgetLoadingBody()}</div>
+    </div>
+  )
+
   const widgetEntries = canvaThread.filter((e) => e.type === 'widget')
   const lastWidgetEntry = widgetEntries[widgetEntries.length - 1]
   const lastWidgetId = lastWidgetEntry?.id
   const hasChooserInThread = canvaThread.some((e) => e.type === 'chooser')
   const chooserInteractive = hasChooserInThread && !secondaryPanelLoading && !remixItem
   const tailVariant = lastWidgetEntry?.variant
+  const tailScratchContentMode = lastWidgetEntry?.scratchContentMode ?? createExistingContentMode
 
   const canvaFollowUpHelperText =
-    tailVariant === 'generating'
+    tailVariant === 'widget-1'
+      ? 'Choose design direction and how chat shapes content, then continue.'
+      : tailVariant === 'generating'
       ? "Your design is being created. You can open it in Canva to watch it unfold."
       : tailVariant === 'remix'
         ? "Review the content and click Edit to make changes in full screen, then click Generate design."
         : tailVariant === 'generate-from-scratch'
-          ? "Adjust Casual, Balanced, or Playful if you like, then click Generate design."
+          ? tailScratchContentMode === 'generate-outline'
+            ? 'Set audience and deck length, review the outline, then click Generate design.'
+            : 'Adjust Casual, Balanced, or Playful if you like, then click Generate design.'
           : tailVariant === 'create-from-existing'
-            ? "Choose a template or design, pick Preserve content or Condense content, then click Generate design."
+            ? "Choose a template or design, set how chat content is used, then click Generate design."
             : hasChooserInThread
               ? "Choose how you'd like to get started above, or pick another option anytime."
               : "Scroll up to review earlier steps or continue below."
@@ -604,11 +1251,18 @@ Clear recommendations and what you need from the audience. Make the ask specific
   const chooserFollowUpText = "Choose how you'd like to get started above, or pick another option anytime."
 
   const followUpForLiveWidget = (w) => {
+    if (w.variant === 'widget-1') {
+      return 'Choose design direction and how chat shapes content, then continue.'
+    }
     if (w.variant === 'generate-from-scratch') {
+      const mode = w.scratchContentMode ?? createExistingContentMode
+      if (mode === 'generate-outline') {
+        return 'Set audience and deck length, review the outline, then click Generate design.'
+      }
       return "Adjust Casual, Balanced, or Playful if you like, then click Generate design."
     }
     if (w.variant === 'create-from-existing') {
-      return "Choose a template or design, pick Preserve content or Condense content, then click Generate design."
+      return "Choose a template or design, adjust content treatment if needed, then click Generate design."
     }
     if (w.variant === 'remix') {
       return "Review the content and click Edit to make changes in full screen, then click Generate design."
@@ -618,15 +1272,21 @@ Clear recommendations and what you need from the audience. Make the ask specific
 
   const followUpForFrozenWidget = (entry) => {
     switch (entry.variant) {
+      case 'widget-1':
+        return 'Design and content choices were set here — continue below.'
       case 'generate-from-scratch':
-        return 'Outline and tone were set in this step — newer actions are below.'
+        return entry.scratchContentModeSnap === 'generate-outline'
+          ? 'Outline from chat was set in this step — newer actions are below.'
+          : 'Outline and tone were set in this step — newer actions are below.'
       case 'create-from-existing': {
         const mode =
           entry.cfeContentModeSnap === 'condense'
-            ? 'Condense content'
+            ? 'Condense outline'
             : entry.cfeContentModeSnap === 'preserve'
-              ? 'Preserve content'
-              : ''
+              ? 'Preserve chat content'
+              : entry.cfeContentModeSnap === 'generate-outline'
+                ? 'Generate outline from chat'
+                : ''
         const modePart = mode ? ` (${mode})` : ''
         return `Design "${entry.cfeSnapshot?.name ?? 'selected'}"${modePart} was set here — continue below.`
       }
@@ -653,8 +1313,8 @@ Clear recommendations and what you need from the audience. Make the ask specific
     setCreateExistingPickerOpen(false)
   }
 
-  const showCanvaStack = flowStep !== 'outline' && (secondaryPanelLoading || canvaThread.length > 0)
-  const showCanvaFallbackFollowUp = flowStep !== 'outline' && !showCanvaStack
+  const showCanvaStack = wizardStep >= 3 && (secondaryPanelLoading || canvaThread.length > 0)
+  const showCanvaFallbackFollowUp = wizardStep >= 3 && !showCanvaStack
   const canvaScrollKey = `${canvaThread.map((e) => e.id).join('-')}-${lastWidgetId ?? ''}-${secondaryPanelLoading ? 1 : 0}`
 
   const renderCreateFromExistingInteractive = (disableGenerateActions) => (
@@ -693,7 +1353,7 @@ Clear recommendations and what you need from the audience. Make the ask specific
                                   className={`segmented-tab ${createTab === 'brand-template' ? 'active' : ''}`}
                                   onClick={() => handleTabClick('brand-template')}
                                 >
-                                  Brand template ({noUserBrandTemplates ? 0 : brandTemplates.length})
+                                  Brand Template ({noUserBrandTemplates ? 0 : brandTemplates.length})
                                 </button>
                                 <button
                                   type="button"
@@ -714,7 +1374,7 @@ Clear recommendations and what you need from the audience. Make the ask specific
                                 <input
                                   type="text"
                                   className="template-search-input"
-                                  placeholder={`Search ${createTab === 'brand-template' ? 'brand templates' : 'your designs'}…`}
+                                  placeholder={`Search ${createTab === 'brand-template' ? 'Brand Templates' : 'your designs'}…`}
                                   value={pickerSearchQuery}
                                   onChange={(e) => setPickerSearchQuery(e.target.value)}
                                   onClick={(e) => e.stopPropagation()}
@@ -741,8 +1401,8 @@ Clear recommendations and what you need from the audience. Make the ask specific
                                       <path d="M3 9h18"/>
                                       <path d="M9 21V9"/>
                                     </svg>
-                                    <p className="picker-empty-title">No brand templates set up</p>
-                                    <p className="picker-empty-desc">Create a brand template in Canva to use your brand colours, fonts and logos automatically.</p>
+                                    <p className="picker-empty-title">No Brand Templates set up</p>
+                                    <p className="picker-empty-desc">Create a Brand Template in Canva to use your brand colours, fonts and logos automatically.</p>
                                     <a
                                       href="https://www.canva.com/brand/"
                                       target="_blank"
@@ -750,7 +1410,7 @@ Clear recommendations and what you need from the audience. Make the ask specific
                                       className="picker-empty-link"
                                       onClick={(e) => e.stopPropagation()}
                                     >
-                                      Set up a brand template in Canva →
+                                      Set up a Brand Template in Canva →
                                     </a>
                                   </div>
                                 ) : (() => {
@@ -826,20 +1486,27 @@ Clear recommendations and what you need from the audience. Make the ask specific
                           ) : null}
                         </div>
                         <div className="outline-section-label">Content treatment</div>
-                        <div className="segmented-control create-existing-content-mode" role="group" aria-label="Content treatment">
+                        <div className="segmented-control create-existing-content-mode create-existing-content-mode--three" role="group" aria-label="Content treatment">
                           <button
                             type="button"
                             className={`segmented-tab ${createExistingContentMode === 'preserve' ? 'active' : ''}`}
                             onClick={() => setCreateExistingContentMode('preserve')}
                           >
-                            Preserve content
+                            Preserve chat content
+                          </button>
+                          <button
+                            type="button"
+                            className={`segmented-tab ${createExistingContentMode === 'generate-outline' ? 'active' : ''}`}
+                            onClick={() => setCreateExistingContentMode('generate-outline')}
+                          >
+                            Generate outline from chat
                           </button>
                           <button
                             type="button"
                             className={`segmented-tab ${createExistingContentMode === 'condense' ? 'active' : ''}`}
                             onClick={() => setCreateExistingContentMode('condense')}
                           >
-                            Condense content
+                            Condense outline
                           </button>
                         </div>
                         <div className="generate-widget-footer generate-widget-footer--cta-only">
@@ -855,7 +1522,7 @@ Clear recommendations and what you need from the audience. Make the ask specific
 
 
   useLayoutEffect(() => {
-    if (flowStep === 'outline') return
+    if (wizardStep < 3) return
     const el = chatScrollRef.current
     if (!el) return
     const scrollToBottom = () => {
@@ -882,7 +1549,7 @@ Clear recommendations and what you need from the audience. Make the ask specific
       timeouts.forEach(clearTimeout)
     }
   }, [
-    flowStep,
+    wizardStep,
     secondaryPanelLoading,
     widgetStep,
     canvaScrollKey,
@@ -915,135 +1582,74 @@ Clear recommendations and what you need from the audience. Make the ask specific
       {/* Main content */}
       <main className="main-content">
         {/* Header */}
-        <header className="header">
+        <header className={`header${wizardStep === 1 ? ' header--prompt-home' : ''}`}>
           <div className="header-dropdown">
-            <span>ChatGPT 5</span>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+            <span className="header-model-name">ChatGPT</span>
+            <span className="header-model-version">5</span>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
               <polyline points="6 9 12 15 18 9" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
             </svg>
           </div>
-          <div className="header-actions">
-            <button className="header-btn share-btn">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/>
-                <polyline points="16 6 12 2 8 6"/>
-                <line x1="12" y1="2" x2="12" y2="15"/>
-              </svg>
-              Share
-            </button>
-            <button className="header-btn icon-btn" aria-label="More options">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-                <circle cx="12" cy="12" r="1.5"/>
-                <circle cx="6" cy="12" r="1.5"/>
-                <circle cx="18" cy="12" r="1.5"/>
-              </svg>
-            </button>
-          </div>
+          {wizardStep !== 1 ? (
+            <div className="header-actions">
+              <button type="button" className="header-btn share-btn">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/>
+                  <polyline points="16 6 12 2 8 6"/>
+                  <line x1="12" y1="2" x2="12" y2="15"/>
+                </svg>
+                Share
+              </button>
+              <button type="button" className="header-btn icon-btn" aria-label="More options">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                  <circle cx="12" cy="12" r="1.5"/>
+                  <circle cx="6" cy="12" r="1.5"/>
+                  <circle cx="18" cy="12" r="1.5"/>
+                </svg>
+              </button>
+            </div>
+          ) : null}
         </header>
 
-        {/* Chat pane */}
-        <div className="chat-pane">
-          <div className="chat-inner" ref={chatScrollRef}>
-            <div className="conversation">
-              {/* Outline page - deck outline (from ChatGPT, not Canva). Figma prompt shown as user message. */}
-              {flowStep === 'outline' && (
-                <>
-                  <div className="message-row user">
-                    <div className="message-bubble">
-                      <p>{DECK_PROMPT}</p>
+        {/* Chat pane — step 1 matches Figma Prompt-to-Deck home (centered hero + composer) */}
+        <div className={`chat-pane${wizardStep === 1 ? ' chat-pane--home' : ''}`}>
+          <div className={`chat-inner${wizardStep === 1 ? ' chat-inner--home' : ''}`} ref={chatScrollRef}>
+            {wizardStep === 1 ? (
+              <div className="home-hero">
+                <h1 className="home-hero-title">What can I help you with?</h1>
+                <form className="composer composer--home" onSubmit={handleCaptureSubmit}>
+                  <div className="composer-home-content">
+                    <div className="composer-home-value-row">
+                      <input
+                        type="text"
+                        className="composer-input composer-input--home"
+                        placeholder="Ask anything"
+                        value={capturePrompt}
+                        onChange={(e) => setCapturePrompt(e.target.value)}
+                        autoFocus
+                      />
                     </div>
-                  </div>
-                  <div className="app-content outline-response">
-                    <div className="outline-container">
-                      <h2 className="outline-title">Deck Outline</h2>
-                      <p className="outline-subtitle">Generated by ChatGPT</p>
-                      <div className="outline-sections">
-                        <section className="outline-section">
-                          <h3 className="outline-section-title">1. Cover — Deploy 2026</h3>
-                          <p className="outline-section-desc">Opening slide with event branding, date, and venue. Establish the Deploy 2026 identity and set the tone for the presentation.</p>
-                          <ul className="outline-section-points">
-                            <li>Event logo and tagline</li>
-                            <li>Date and location</li>
-                            <li>Presenter name and title</li>
-                          </ul>
-                        </section>
-                        <section className="outline-section">
-                          <h3 className="outline-section-title">2. Agenda — Key topics overview</h3>
-                          <p className="outline-section-desc">Outline the main themes and structure of the presentation so the audience knows what to expect and can follow along.</p>
-                          <ul className="outline-section-points">
-                            <li>Problem statement and market context</li>
-                            <li>Solution and product overview</li>
-                            <li>Product demo and key features</li>
-                            <li>Team, traction, and ask</li>
-                          </ul>
-                        </section>
-                        <section className="outline-section">
-                          <h3 className="outline-section-title">3. Problem — Market opportunity</h3>
-                          <p className="outline-section-desc">Address the challenges and gaps in the current landscape. Articulate the pain points your target audience faces and the market opportunity that exists.</p>
-                          <ul className="outline-section-points">
-                            <li>Current state and pain points</li>
-                            <li>Market size and growth potential</li>
-                            <li>Why now? Timing and trends</li>
-                            <li>Competitive landscape gaps</li>
-                          </ul>
-                        </section>
-                        <section className="outline-section">
-                          <h3 className="outline-section-title">4. Solution — Product overview</h3>
-                          <p className="outline-section-desc">Introduce your offering and how it solves the identified problems. Position your solution clearly and differentiate from alternatives.</p>
-                          <ul className="outline-section-points">
-                            <li>Product vision and value proposition</li>
-                            <li>Core capabilities and benefits</li>
-                            <li>Target customer and use cases</li>
-                            <li>Key differentiators</li>
-                          </ul>
-                        </section>
-                        <section className="outline-section">
-                          <h3 className="outline-section-title">5. Product demo — Key features</h3>
-                          <p className="outline-section-desc">Walk through the most important capabilities and differentiators. Show, don’t tell—demonstrate how the product works in practice.</p>
-                          <ul className="outline-section-points">
-                            <li>Feature highlights with screenshots or mockups</li>
-                            <li>User flow and key workflows</li>
-                            <li>Integration and ecosystem</li>
-                            <li>Roadmap preview</li>
-                          </ul>
-                        </section>
-                        <section className="outline-section">
-                          <h3 className="outline-section-title">6. Team — Leadership & expertise</h3>
-                          <p className="outline-section-desc">Highlight the people behind the vision and their relevant experience. Build trust and credibility through the team’s track record.</p>
-                          <ul className="outline-section-points">
-                            <li>Founder and key leadership bios</li>
-                            <li>Relevant experience and achievements</li>
-                            <li>Advisors and board</li>
-                            <li>Why this team can execute</li>
-                          </ul>
-                        </section>
-                        <section className="outline-section">
-                          <h3 className="outline-section-title">7. Traction — Metrics & milestones</h3>
-                          <p className="outline-section-desc">Share progress, validation, and proof points to build credibility. Use concrete numbers and milestones to demonstrate momentum.</p>
-                          <ul className="outline-section-points">
-                            <li>Key metrics (users, revenue, growth)</li>
-                            <li>Customer logos and testimonials</li>
-                            <li>Partnerships and milestones</li>
-                            <li>Recognition and awards</li>
-                          </ul>
-                        </section>
-                        <section className="outline-section">
-                          <h3 className="outline-section-title">8. Ask — Next steps & call to action</h3>
-                          <p className="outline-section-desc">Clear recommendations and what you need from the audience. Make the ask specific, actionable, and easy to say yes to.</p>
-                          <ul className="outline-section-points">
-                            <li>Funding amount and use of funds (if applicable)</li>
-                            <li>Partnership or pilot opportunities</li>
-                            <li>Next meeting or follow-up</li>
-                            <li>Contact information</li>
-                          </ul>
-                        </section>
+                    <div className="composer-home-action-bar">
+                      <div className="composer-home-action-left">
+                        <button type="button" className="composer-home-icon-btn" aria-label="Add">
+                          <img src="/svg/Icon.svg" alt="" width={20} height={20} />
+                        </button>
+                      </div>
+                      <div className="composer-home-action-right">
+                        <button type="button" className="composer-home-voice-btn" aria-label="Voice input">
+                          <img src="/svg/_Composer-action/Icon.svg" alt="" width={20} height={20} />
+                        </button>
+                        <button type="submit" className="send-btn composer-home-send" aria-label="Send">
+                          <img src="/svg/_Composer-action/Send.svg" alt="" width={36} height={36} />
+                        </button>
                       </div>
                     </div>
                   </div>
-                  <ChatGptFollowUp text="Refine the outline above or ask for changes. When ready, choose how you'd like to create your deck." />
-                </>
-              )}
-              {flowStep !== 'outline' && (submittedPrompt || remixItem) && (
+                </form>
+              </div>
+            ) : null}
+            <div className={`conversation${wizardStep === 1 ? ' conversation--hidden' : ''}`}>
+              {wizardStep >= 3 && (submittedPrompt || remixItem) && (
                 <div className="message-row user">
                   <div className="message-bubble">
                     <p>{remixItem ? `Edit ${remixItem.name} with AI` : submittedPrompt}</p>
@@ -1052,24 +1658,12 @@ Clear recommendations and what you need from the audience. Make the ask specific
               )}
 
               {/* Canva section - stacked chooser + widgets */}
-              {flowStep !== 'outline' && (
+              {wizardStep >= 3 && (
               <div className="app-content">
                 {showCanvaStack ? (
                 <div className="canva-widget-stack">
                   {canvaThread.length === 0 && secondaryPanelLoading ? (
-                  <div className="canva-tool-thread-block">
-                      <div
-                        className="canva-secondary-loading-chat"
-                        role="status"
-                        aria-live="polite"
-                        aria-label={SECONDARY_LOAD_MESSAGES[secondaryLoadPhaseIndex]}
-                      >
-                        <span className="chatgpt-loading-dot" aria-hidden />
-                        <span className="canva-secondary-loading-chat-message">
-                          {SECONDARY_LOAD_MESSAGES[secondaryLoadPhaseIndex]}
-                        </span>
-                      </div>
-                  </div>
+                    renderCanvaWidgetLoadingSegment()
                   ) : (
                   <>
                   {canvaThread.map((entry) => {
@@ -1088,6 +1682,7 @@ Clear recommendations and what you need from the audience. Make the ask specific
                     <div className="cards-row">
                       <div className="card" onClick={() => {
                         if (!chooserInteractive) return
+                        setCreateExistingContentMode('preserve')
                         runAfterSecondaryLoad(() => {
                           setCanvaThread((t) => {
                             const withSnap = snapshotPreviousTailWidget(t)
@@ -1131,8 +1726,8 @@ Clear recommendations and what you need from the audience. Make the ask specific
                           </div>
                         </div>
                         <div className="card-content">
-                          <p className="card-title">Autofill brand template</p>
-                          <p className="card-desc">Automatically fill a brand template with your content.</p>
+                          <p className="card-title">Autofill Brand Template</p>
+                          <p className="card-desc">Automatically fill a Brand Template with your content.</p>
                         </div>
                       </div>
                     </div>
@@ -1149,91 +1744,366 @@ Clear recommendations and what you need from the audience. Make the ask specific
                   })}
                   {widgetEntries.map((w, idx) => {
                     const isLast = idx === widgetEntries.length - 1
-                    const lastW = widgetEntries[widgetEntries.length - 1]
-                    const penultimate = widgetEntries.length >= 2 ? widgetEntries[widgetEntries.length - 2] : null
-                    const keepCreateFromExistingFullAboveGen =
-                      w.variant === 'create-from-existing' &&
-                      lastW?.variant === 'generating' &&
-                      penultimate &&
-                      w.id === penultimate.id
 
-                    if (!isLast) {
-                      if (keepCreateFromExistingFullAboveGen) {
-                        return (
-                  <div key={w.id} className="canva-thread-segment">
-                  <div className="app-attribution">
-                    <div className="canva-logo">
-                      <img src="/Canva_Icon_logo.png" alt="Canva" width={24} height={24} />
-                    </div>
-                    <span>Canva</span>
-                  </div>
-                  <div className="canva-tool-thread-block">
-                    {renderCreateFromExistingInteractive(true)}
-                  </div>
-                  <div className="chatgpt-follow-up chatgpt-follow-up--post-widget">
-                    <p className="chatgpt-follow-up-text">Choose a template or design, pick Preserve content or Condense content, then generate when ready.</p>
-                    <FollowUpActions />
-                  </div>
-                  </div>
-                        )
-                      }
+                    if (w.variant === 'widget-1') {
                       return (
-                  <div key={w.id} className="canva-thread-segment">
-                  <div className="app-attribution">
-                    <div className="canva-logo">
-                      <img src="/Canva_Icon_logo.png" alt="Canva" width={24} height={24} />
-                    </div>
-                    <span>Canva</span>
-                  </div>
-                  <div className="options-container options-container--stacked-past">
-                    {w.variant === 'generate-from-scratch' ? (
-                      <>
-                        <h2 className="section-title">Generate from scratch</h2>
-                        <p className="canva-stack-frozen-desc">
-                          {w.outlineToneSnap
-                            ? `Tone: ${w.outlineToneSnap}. Outline configured — you opened another path below.`
-                            : 'Outline and tone configured — you opened another path below.'}
-                        </p>
-                      </>
-                    ) : null}
-                    {w.variant === 'create-from-existing' ? (
-                      <>
-                        <h2 className="section-title">Create from existing design</h2>
-                        <p className="canva-stack-frozen-desc">
-                          Starting from <strong>{w.cfeSnapshot?.name ?? 'your design'}</strong>
-                          {w.cfeContentModeSnap === 'condense'
-                            ? ' · Condense content'
-                            : w.cfeContentModeSnap === 'preserve'
-                              ? ' · Preserve content'
-                              : ''}
-                          .
-                        </p>
-                      </>
-                    ) : null}
-                    {w.variant === 'remix' ? (
-                      <>
-                        <h2 className="section-title">Edit with AI</h2>
-                        <p className="canva-stack-frozen-desc">{w.remixSnap?.name ?? 'Design'} — saved above.</p>
-                      </>
-                    ) : null}
-                    {w.variant === 'generating' ? (
-                      <>
-                        <h2 className="section-title">Live generation</h2>
-                        <p className="canva-stack-frozen-desc">Generation ran here — newer activity is below.</p>
-                      </>
-                    ) : null}
-                  </div>
-                  <div className="chatgpt-follow-up chatgpt-follow-up--post-widget">
-                    <p className="chatgpt-follow-up-text">{followUpForFrozenWidget(w)}</p>
-                    <FollowUpActions />
-                  </div>
-                  </div>
+                        <div key={w.id} ref={isLast ? canvaLatestSegmentRef : null} className={`canva-thread-segment${isLast ? ' canva-thread-segment--latest' : ''}`}>
+                          <div className="canva-tool-thread-block">
+                            <div className="app-content widget1-figma">
+                              <p className="widget1-connected-heading">Connected to app</p>
+                              <div className="widget1-canva-caption">
+                                <img
+                                  src="/figma-widget1-design/b74983a16a516ac191fc93d18bf330550319e45f.png"
+                                  alt=""
+                                  className="widget1-canva-caption-icon"
+                                  width={14}
+                                  height={14}
+                                />
+                                <span className="widget1-canva-caption-text">Canva</span>
+                              </div>
+                              <h2 className="widget1-section-heading">Select the Style and Brand of the design</h2>
+                              <div className="widget1-style-pills">
+                                {[
+                                  { value: 'no-style-preference', label: 'No preference', icon: (
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden><circle cx="12" cy="12" r="9"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+                                  )},
+                                  { value: 'select-style', label: 'Select a Style', icon: (
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden><circle cx="13.5" cy="6.5" r=".5" fill="currentColor"/><circle cx="17.5" cy="10.5" r=".5" fill="currentColor"/><circle cx="8.5" cy="7.5" r=".5" fill="currentColor"/><circle cx="6.5" cy="12.5" r=".5" fill="currentColor"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z"/></svg>
+                                  )},
+                                  { value: 'apply-brand', label: 'Apply Brand', icon: (
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 17l-6.2 4.3 2.4-7.4L2 9.4h7.6z"/></svg>
+                                  )},
+                                  { value: 'reference-design', label: 'Use existing design', icon: (
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><path d="M17.5 17.5m-2 0a2 2 0 1 0 4 0a2 2 0 1 0-4 0"/></svg>
+                                  )},
+                                ].map(({ value, label, icon }) => (
+                                  <button
+                                    key={value}
+                                    type="button"
+                                    className={`widget1-style-pill${wizardScratchStyleMode === value ? ' widget1-style-pill--active' : ''}`}
+                                    onClick={() => {
+                                      setWizardScratchStyleMode(value)
+                                      if (value !== 'reference-design') setWizardReferenceTemplateId('')
+                                      setWizardSelectedStyleId('')
+                                      setWizardSelectedBrandKitId('')
+                                    }}
+                                  >
+                                    {icon}
+                                    <span>{label}</span>
+                                  </button>
+                                ))}
+                              </div>
+                              <div className="widget1-figma-card">
+                                <div className="widget1-card-top">
+                                  {wizardScratchStyleMode === 'select-style' ? (
+                                    <div className="widget1-field-row widget1-field-row--hint">
+                                      <div className="widget1-field-row-label">
+                                        <span className="widget1-select-one-hint">Select one</span>
+                                      </div>
+                                    </div>
+                                  ) : null}
+                                </div>
+                                {wizardScratchStyleMode === 'select-style' ? (
+                                  <div className="widget1-styles-rail">
+                                    <div className="widget1-styles-rail-scroll" ref={wizardStyleCarouselRef}>
+                                      <div className="widget1-styles-rail-track">
+                                        {WIZARD_WIDGET1_STYLE_CARDS_ORDERED.map((card) => (
+                                          <button
+                                            key={card.id}
+                                            type="button"
+                                            className={`wizard-style-card widget1-style-card${
+                                              wizardSelectedStyleId === card.id ? ' wizard-style-card--selected' : ''
+                                            }`}
+                                            onClick={() => setWizardSelectedStyleId(card.id)}
+                                          >
+                                            <div className="wizard-style-thumb widget1-style-thumb">
+                                              {card.surprise ? (
+                                                <>
+                                                  <div className="wizard-style-surprise-tiles">
+                                                    <div className="wizard-style-surprise-tile wizard-style-surprise-tile--a widget1-surprise-tile" />
+                                                    <div className="wizard-style-surprise-tile wizard-style-surprise-tile--b widget1-surprise-tile" />
+                                                  </div>
+                                                  <span className="wizard-style-magic-icon" aria-hidden>
+                                                    <svg
+                                                      width="20"
+                                                      height="20"
+                                                      viewBox="0 0 24 24"
+                                                      fill="none"
+                                                      stroke="#8b3dff"
+                                                      strokeWidth="1.8"
+                                                      strokeLinecap="round"
+                                                    >
+                                                      <path d="M12 3l1.2 3.6L17 9l-3.8 1.2L12 14l-1.2-3.8L7 9l3.8-1.2L12 3z" />
+                                                    </svg>
+                                                  </span>
+                                                </>
+                                              ) : (
+                                                <div className="wizard-style-tile-stack widget1-style-tile-stack">
+                                                  <div className="wizard-style-mini-tile wizard-style-mini-tile--tilt-a widget1-mini-tile">
+                                                    <img src={card.img1} alt="" />
+                                                  </div>
+                                                  <div className="wizard-style-mini-tile wizard-style-mini-tile--tilt-b widget1-mini-tile">
+                                                    <img src={card.img2} alt="" />
+                                                  </div>
+                                                </div>
+                                              )}
+                                            </div>
+                                            <span className="wizard-style-card-label widget1-style-card-label">{card.label}</span>
+                                          </button>
+                                        ))}
+                                      </div>
+                                    </div>
+                                    <div className="widget1-styles-rail-edge">
+                                      <div className="widget1-styles-rail-fade" aria-hidden />
+                                      <button
+                                        type="button"
+                                        className="widget1-styles-rail-arrow"
+                                        aria-label="Scroll styles"
+                                        onClick={() => scrollWizardTileCarousel(wizardStyleCarouselRef)}
+                                      >
+                                        <svg
+                                          width="12"
+                                          height="12"
+                                          viewBox="0 0 24 24"
+                                          fill="none"
+                                          stroke="currentColor"
+                                          strokeWidth="2"
+                                          strokeLinecap="round"
+                                          strokeLinejoin="round"
+                                          aria-hidden
+                                        >
+                                          <path d="M9 6l6 6-6 6" />
+                                        </svg>
+                                      </button>
+                                    </div>
+                                  </div>
+                                ) : null}
+                                {wizardScratchStyleMode === 'apply-brand' ? (() => {
+                                  const activeKit = WIZARD_BRAND_KIT_CARDS.find(k => k.id === wizardSelectedBrandKitId)
+                                  const kitTemplates = BRAND_KIT_TEMPLATES[wizardSelectedBrandKitId] || []
+                                  const renderThumb = (palette, idx) => {
+                                    const [c1, c2, c3 = '#fff'] = palette || ['#e0e0e0', '#c0c0c0']
+                                    const heights = ['30%', '38%', '25%']
+                                    const widths = ['55%', '45%', '62%']
+                                    return (
+                                      <div style={{ width: '100%', height: '100%', background: c1, position: 'relative', overflow: 'hidden' }}>
+                                        <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: heights[idx % 3], background: c2 }} />
+                                        <div style={{ position: 'absolute', bottom: 8, left: 8, width: widths[idx % 3], height: 3, background: c3, borderRadius: 2, opacity: 0.8 }} />
+                                        <div style={{ position: 'absolute', bottom: 14, left: 8, width: '40%', height: 3, background: c3, borderRadius: 2, opacity: 0.5 }} />
+                                      </div>
+                                    )
+                                  }
+                                  const renderItem = (t, id, useRealThumb, idx) => {
+                                    const isSelected = wizardReferenceTemplateId === id
+                                    return (
+                                      <div
+                                        key={id}
+                                        className={`template-item outline-template-item${isSelected ? ' template-item-selected' : ''}`}
+                                        onClick={() => setWizardReferenceTemplateId(id)}
+                                      >
+                                        <div className="template-item-main">
+                                          <div className="template-thumb-wrap">
+                                            <div className="template-thumb">
+                                              {useRealThumb && t.thumb
+                                                ? <img src={t.thumb} alt="" />
+                                                : renderThumb(activeKit?.palette, idx)}
+                                            </div>
+                                            {isSelected && (
+                                              <div className="picker-thumb-selected-badge" aria-hidden>
+                                                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                                              </div>
+                                            )}
+                                          </div>
+                                          <div className="template-info">
+                                            <p className="template-name">{t.name}</p>
+                                            <p className="template-type">{t.type}</p>
+                                          </div>
+                                        </div>
+                                        <div className="template-item-actions-right">
+                                          <div className="template-item-actions" onClick={e => e.stopPropagation()}>
+                                            <button type="button" className="template-action-btn template-action-preview" onClick={() => { setPreviewItem(t); setPreviewFromPicker(false) }}>Preview</button>
+                                            <button type="button" className="template-action-btn template-action-remix" onClick={() => setWizardReferenceTemplateId(id)}>Select</button>
+                                          </div>
+                                        </div>
+                                      </div>
+                                    )
+                                  }
+
+                                  if (!wizardSelectedBrandKitId) {
+                                    return (
+                                      <>
+                                        <div className="widget1-field-row widget1-field-row--hint">
+                                          <div className="widget1-field-row-label">
+                                            <span className="widget1-select-one-hint">Select one</span>
+                                          </div>
+                                        </div>
+                                        <div className="widget1-styles-rail widget1-styles-rail--brand">
+                                          <div className="widget1-styles-rail-scroll" ref={wizardBrandKitCarouselRef}>
+                                            <div className="widget1-styles-rail-track">
+                                              {WIZARD_BRAND_KIT_CARDS.map((kit) => (
+                                                <button
+                                                  key={kit.id}
+                                                  type="button"
+                                                  className="wizard-brand-kit-card widget1-brand-kit-card"
+                                                  onClick={() => setWizardSelectedBrandKitId(kit.id)}
+                                                >
+                                                  <div className={`wizard-brand-kit-thumb widget1-brand-kit-thumb ${kit.thumbClass}`}>
+                                                    {kit.img ? <img className="wizard-brand-kit-hero" src={kit.img} alt="" /> : null}
+                                                  </div>
+                                                  <span className="wizard-brand-kit-label widget1-style-card-label">{kit.label}</span>
+                                                </button>
+                                              ))}
+                                            </div>
+                                          </div>
+                                          <div className="widget1-styles-rail-edge">
+                                            <div className="widget1-styles-rail-fade" aria-hidden />
+                                            <button
+                                              type="button"
+                                              className="widget1-styles-rail-arrow"
+                                              aria-label="Scroll brand kits"
+                                              onClick={() => scrollWizardTileCarousel(wizardBrandKitCarouselRef)}
+                                            >
+                                              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                                                <path d="M9 6l6 6-6 6" />
+                                              </svg>
+                                            </button>
+                                          </div>
+                                        </div>
+                                      </>
+                                    )
+                                  }
+
+                                  return (
+                                    <div className="widget1-reference-block widget1-apply-brand-section">
+                                      <div className="widget1-brand-back-row">
+                                        <button
+                                          type="button"
+                                          className="widget1-brand-back-btn"
+                                          onClick={() => { setWizardSelectedBrandKitId(''); setWizardReferenceTemplateId('') }}
+                                        >
+                                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                                            <path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/>
+                                          </svg>
+                                          Back to All Brand Kits
+                                        </button>
+                                      </div>
+                                      <div className="widget1-brand-template-select-hint">
+                                        <span className="widget1-select-one-hint">Select a Brand Template to use as reference</span>
+                                      </div>
+                                      {kitTemplates.length === 0 ? (
+                                        <div className="widget1-brand-empty-state">
+                                          <div className="widget1-brand-empty-icon" aria-hidden>
+                                            <svg width="36" height="36" viewBox="0 0 24 24" fill="none" strokeLinecap="round" strokeLinejoin="round">
+                                              <path d="M12 3l1.5 4.5L18 9l-4.5 1.5L12 15l-1.5-4.5L6 9l4.5-1.5z" stroke="#8b3dff" strokeWidth="1.5"/>
+                                              <path d="M19 15l.75 2.25L22 18l-2.25.75L19 21l-.75-2.25L16 18l2.25-.75z" stroke="#c47aff" strokeWidth="1"/>
+                                            </svg>
+                                          </div>
+                                          <h3 className="widget1-brand-empty-title">Create faster with Brand Templates</h3>
+                                          <p className="widget1-brand-empty-desc">Create a Brand Template so you can reuse it every time to stay on brand</p>
+                                          <a href="https://www.canva.com/brand/" target="_blank" rel="noopener noreferrer" className="widget1-brand-empty-btn">
+                                            Go to Brand Kit
+                                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                                              <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/>
+                                            </svg>
+                                          </a>
+                                        </div>
+                                      ) : (
+                                        <div className="outline-template-list">
+                                          {kitTemplates.map((t, idx) => renderItem(t, t.id, false, idx))}
+                                        </div>
+                                      )}
+                                    </div>
+                                  )
+                                })() : null}
+                                {wizardScratchStyleMode === 'reference-design' ? (
+                                  <div className="widget1-reference-block">
+                                    <div className="outline-brand-template-picker">
+                                      <div className="widget1-brand-template-select-hint">
+                                        <span className="widget1-select-one-hint">Select one</span>
+                                      </div>
+                                      <div className="outline-template-search-wrap">
+                                        <svg className="outline-template-search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                                          <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                                        </svg>
+                                        <input
+                                          className="outline-template-search-input"
+                                          type="text"
+                                          placeholder="Search designs…"
+                                          value={widget1TemplateSearch}
+                                          onChange={e => setWidget1TemplateSearch(e.target.value)}
+                                        />
+                                      </div>
+                                      <div className="outline-template-list">
+                                        {yourDesigns.filter(d => !widget1TemplateSearch || d.name.toLowerCase().includes(widget1TemplateSearch.toLowerCase())).slice(0, 3).map((d, idx) => {
+                                          const id = `design-${d.id}`
+                                          const isSelected = wizardReferenceTemplateId === id
+                                          return (
+                                            <div
+                                              key={id}
+                                              className={`template-item outline-template-item${isSelected ? ' template-item-selected' : ''}`}
+                                              onClick={() => setWizardReferenceTemplateId(id)}
+                                            >
+                                              <div className="template-item-main">
+                                                <div className="template-thumb-wrap">
+                                                  <div className="template-thumb">
+                                                    {d.thumb ? <img src={d.thumb} alt="" /> : null}
+                                                  </div>
+                                                  {isSelected && (
+                                                    <div className="picker-thumb-selected-badge" aria-hidden>
+                                                      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                                                    </div>
+                                                  )}
+                                                </div>
+                                                <div className="template-info">
+                                                  <p className="template-name">{d.name}</p>
+                                                  <p className="template-type">{d.type}</p>
+                                                </div>
+                                              </div>
+                                              <div className="template-item-actions-right">
+                                                <div className="template-item-actions" onClick={e => e.stopPropagation()}>
+                                                  <button type="button" className="template-action-btn template-action-preview" onClick={() => { setPreviewItem(d); setPreviewFromPicker(false) }}>Preview</button>
+                                                  <button type="button" className="template-action-btn template-action-remix" onClick={() => setWizardReferenceTemplateId(id)}>Select</button>
+                                                </div>
+                                              </div>
+                                            </div>
+                                          )
+                                        })}
+                                      </div>
+                                    </div>
+                                  </div>
+                                ) : null}
+                                <div className="widget1-card-actions widget1-card-actions--dual">
+                                  <button
+                                    type="button"
+                                    className="widget1-figma-secondary"
+                                    onClick={() => handleWizardContinue('generate-outline')}
+                                    disabled={widget1ContinueDisabled || secondaryPanelLoading || !isLast}
+                                  >
+                                    Generate and review outline
+                                  </button>
+                                  <button
+                                    type="button"
+                                    className="widget1-figma-primary widget1-figma-primary--canva"
+                                    onClick={() => handleWizardContinue('preserve-chat')}
+                                    disabled={widget1ContinueDisabled || secondaryPanelLoading || !isLast}
+                                  >
+                                    Generate design
+                                  </button>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                          <div className="chatgpt-follow-up chatgpt-follow-up--post-widget">
+                            <p className="chatgpt-follow-up-text">{followUpForLiveWidget(w)}</p>
+                            <FollowUpActions />
+                          </div>
+                        </div>
                       )
                     }
 
                     if (w.variant === 'generating') {
                       return (
-                  <div key={w.id} ref={canvaLatestSegmentRef} className="canva-thread-segment canva-thread-segment--latest">
+                  <div key={w.id} ref={isLast ? canvaLatestSegmentRef : null} className={`canva-thread-segment${isLast ? ' canva-thread-segment--latest' : ''}`}>
                   <div className="app-attribution">
                     <div className="canva-logo">
                       <img src="/Canva_Icon_logo.png" alt="Canva" width={24} height={24} />
@@ -1308,7 +2178,7 @@ Clear recommendations and what you need from the audience. Make the ask specific
                       <p className="chatgpt-follow-up-text">
                         Your design is being created. You can open it in Canva to watch it unfold. We’ve also converted{' '}
                         <strong>{createExistingItem?.name}</strong>
-                        {' '}into a brand template for you.{' '}
+                        {' '}into a Brand Template for you.{' '}
                         <a href="#" className="chatgpt-follow-up-inline-link" onClick={(e) => e.preventDefault()}>View in Canva →</a>
                       </p>
                     ) : (
@@ -1321,7 +2191,7 @@ Clear recommendations and what you need from the audience. Make the ask specific
                     }
 
                     return (
-                  <div key={w.id} className="canva-thread-segment canva-thread-segment--latest">
+                  <div key={w.id} ref={isLast ? canvaLatestSegmentRef : null} className={`canva-thread-segment${isLast ? ' canva-thread-segment--latest' : ''}`}>
                   <div className="app-attribution">
                     <div className="canva-logo">
                       <img src="/Canva_Icon_logo.png" alt="Canva" width={24} height={24} />
@@ -1410,7 +2280,7 @@ Clear recommendations and what you need from the audience. Make the ask specific
                         </div>
                       </div>
                       <div className="remix-widget-footer">
-                        <button type="button" className="remix-generate-btn" onClick={handleGenerateDesign} disabled={secondaryPanelLoading}>
+                        <button type="button" className="remix-generate-btn" onClick={handleGenerateDesign} disabled={secondaryPanelLoading || !isLast}>
                           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                             <polyline points="20 6 9 17 4 12"/>
                           </svg>
@@ -1425,94 +2295,165 @@ Clear recommendations and what you need from the audience. Make the ask specific
                   <div className="canva-widget-with-header">
                   <div className="options-container options-container--guided-scratch">
                     <div className="generate-from-scratch-widget generate-from-scratch-widget--guided">
-
-                      <div className="generate-from-scratch-header generate-from-scratch-header--title-only">
-                        <h2 className="generate-widget-title">Generate from scratch</h2>
-                      </div>
-                      <div className="outline-section-label">Customise the outline</div>
-                      <div className="tone-pills tone-pills--guided">
-                        <button type="button" className={`tone-pill tone-pill--guided ${outlineTone === 'casual' ? 'active' : ''}`} onClick={() => setOutlineTone('casual')}>
-                          <svg className="tone-pill-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-                            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
-                            <circle cx="9" cy="7" r="4" />
-                            <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
-                            <path d="M16 3.13a4 4 0 0 1 0 7.75" />
-                          </svg>
-                          Casual
-                          <svg className="tone-pill-chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden><polyline points="6 9 12 15 18 9"/></svg>
-                        </button>
-                        <button type="button" className={`tone-pill tone-pill--guided ${outlineTone === 'balanced' ? 'active' : ''}`} onClick={() => setOutlineTone('balanced')}>
-                          <svg className="tone-pill-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-                            <rect x="3" y="3" width="18" height="18" rx="3" />
-                            <line x1="7" y1="8" x2="17" y2="8" />
-                            <line x1="7" y1="12" x2="17" y2="12" />
-                            <line x1="7" y1="16" x2="13" y2="16" />
-                          </svg>
-                          Balanced
-                          <svg className="tone-pill-chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden><polyline points="6 9 12 15 18 9"/></svg>
-                        </button>
-                        <button type="button" className={`tone-pill tone-pill--guided ${outlineTone === 'playful' ? 'active' : ''}`} onClick={() => setOutlineTone('playful')}>
-                          <svg className="tone-pill-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-                            <circle cx="13.5" cy="6.5" r=".5" fill="currentColor" stroke="none" />
-                            <circle cx="17.5" cy="10.5" r=".5" fill="currentColor" stroke="none" />
-                            <circle cx="8.5" cy="7.5" r=".5" fill="currentColor" stroke="none" />
-                            <circle cx="6.5" cy="12.5" r=".5" fill="currentColor" stroke="none" />
-                            <path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.47-1.125-.29-.289-.47-.687-.47-1.125a1.64 1.64 0 0 1 1.648-1.688h1.96c3.073 0 5.684-2.539 5.684-5.664C22 6.216 17.5 2 12 2z" />
-                          </svg>
-                          Playful
-                          <svg className="tone-pill-chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden><polyline points="6 9 12 15 18 9"/></svg>
-                        </button>
-                        <button type="button" className="tone-pill tone-pill--guided">
-                          <svg className="tone-pill-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-                            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
-                          </svg>
-                          Byte
-                          <svg className="tone-pill-chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden><polyline points="6 9 12 15 18 9"/></svg>
-                        </button>
-                        <button type="button" className="tone-pill tone-pill--guided tone-pill-update">
-                          <svg className="tone-pill-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-                            <path d="M23 4v6h-6" />
-                            <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10" />
-                          </svg>
-                          Update
-                        </button>
-                      </div>
-                      <div className="outline-section-label">Review the outline content</div>
-                      <div
-                        className="outline-content-preview"
-                        onClick={() => setEditDocumentFullscreenOpen(true)}
-                        role="button"
-                        tabIndex={0}
-                        onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setEditDocumentFullscreenOpen(true); } }}
-                      >
-                        <div className="outline-content-preview-header">
-                          <span className="outline-content-preview-title">Editable document</span>
-                          <button
-                            type="button"
-                            className="outline-content-preview-open-btn"
-                            onClick={(e) => { e.stopPropagation(); setEditDocumentFullscreenOpen(true); }}
-                          >
-                            Edit
-                          </button>
-                        </div>
-                        <div className="outline-content-preview-body">
-                          <p className="outline-content-preview-doc-title">Deploy 2026 deck</p>
-                          <p className="outline-content-preview-text">{remixContent}</p>
-                          <div className="outline-preview-fade" />
-                        </div>
-                      </div>
-                      <div className="generate-widget-footer generate-widget-footer--cta-only">
-                        <button type="button" className="generate-design-btn generate-design-btn--guided" onClick={handleGenerateDesign} disabled={secondaryPanelLoading}>
-                          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden><polyline points="20 6 9 17 4 12" /></svg>
-                          Generate design
-                        </button>
-                      </div>
+                      {(() => {
+                        const effectiveScratchContentMode = w.scratchContentMode ?? createExistingContentMode
+                        const scratchOutlineVisibleCount =
+                          scratchOutlineLength === 'short'
+                            ? 5
+                            : generateFromScratchOutline.length
+                        const visibleOutline = generateFromScratchOutline.slice(0, scratchOutlineVisibleCount)
+                        const scratchHeader = (
+                          <>
+                            {scratchStyleMode === 'apply-brand' ? (
+                              <p className="scratch-style-brand-ref scratch-style-brand-ref--mode">
+                                <span className="scratch-style-brand-ref-label">Style & Brand</span>
+                                <span className="scratch-style-brand-ref-name">
+                                  {scratchSelectedBrandKit?.label ?? ''}
+                                  {scratchStyleBrandTemplate ? ` · ${scratchStyleBrandTemplate.name}` : ''}
+                                </span>
+                              </p>
+                            ) : null}
+                            {scratchStyleMode === 'select-style' && scratchSelectedStyle ? (
+                              <p className="scratch-style-brand-ref scratch-style-brand-ref--mode">
+                                <span className="scratch-style-brand-ref-label">Presentation style</span>
+                                <span className="scratch-style-brand-ref-name">{scratchSelectedStyle.label}</span>
+                              </p>
+                            ) : null}
+                          </>
+                        )
+                        return effectiveScratchContentMode === 'generate-outline' ? (
+                          <>
+                            <div className="generate-from-scratch-header generate-from-scratch-header--title-only">
+                              <h2 className="generate-widget-title">Edit outline</h2>
+                              {scratchHeader}
+                            </div>
+                            <div className="scratch-outline-meta-row">
+                              <div className="wizard-config-field">
+                                <label className="wizard-config-label" htmlFor="scratch-outline-content">Text Content</label>
+                                <select
+                                  id="scratch-outline-content"
+                                  className="wizard-config-select"
+                                  value={scratchOutlineContent}
+                                  onChange={(e) => setScratchOutlineContent(e.target.value)}
+                                >
+                                  {SCRATCH_OUTLINE_CONTENT_OPTIONS.map((opt) => (
+                                    <option key={opt.value} value={opt.value}>{opt.label}</option>
+                                  ))}
+                                </select>
+                              </div>
+                            </div>
+                            <div className="outline-section-label">Outline</div>
+                            <div className="outline-items outline-items--guided">
+                              {visibleOutline.map((item) => (
+                                <div key={item.num} className="outline-item outline-item--guided">
+                                  <div className="outline-item-num outline-item-num--guided">{item.num}</div>
+                                  <div className="outline-item-content">
+                                    <p className="outline-item-title outline-item-title--guided">{item.title}</p>
+                                    <p className="outline-item-desc outline-item-desc--guided">{item.desc}</p>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                            <div className="generate-widget-footer generate-widget-footer--guided">
+                              <button type="button" className="generate-design-btn generate-design-btn--guided" onClick={handleGenerateDesign} disabled={secondaryPanelLoading || !isLast}>
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden><polyline points="20 6 9 17 4 12" /></svg>
+                                Generate design
+                              </button>
+                            </div>
+                          </>
+                        ) : (
+                          <>
+                            <div className="generate-from-scratch-header generate-from-scratch-header--title-only">
+                              <h2 className="generate-widget-title">Edit outline</h2>
+                              {scratchHeader}
+                            </div>
+                            <div className="outline-section-label">Customise the outline</div>
+                            <div className="tone-pills tone-pills--guided">
+                              <button type="button" className={`tone-pill tone-pill--guided ${outlineTone === 'casual' ? 'active' : ''}`} onClick={() => setOutlineTone('casual')}>
+                                <svg className="tone-pill-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                                  <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                                  <circle cx="9" cy="7" r="4" />
+                                  <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+                                  <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+                                </svg>
+                                Casual
+                                <svg className="tone-pill-chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden><polyline points="6 9 12 15 18 9"/></svg>
+                              </button>
+                              <button type="button" className={`tone-pill tone-pill--guided ${outlineTone === 'balanced' ? 'active' : ''}`} onClick={() => setOutlineTone('balanced')}>
+                                <svg className="tone-pill-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                                  <rect x="3" y="3" width="18" height="18" rx="3" />
+                                  <line x1="7" y1="8" x2="17" y2="8" />
+                                  <line x1="7" y1="12" x2="17" y2="12" />
+                                  <line x1="7" y1="16" x2="13" y2="16" />
+                                </svg>
+                                Balanced
+                                <svg className="tone-pill-chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden><polyline points="6 9 12 15 18 9"/></svg>
+                              </button>
+                              <button type="button" className={`tone-pill tone-pill--guided ${outlineTone === 'playful' ? 'active' : ''}`} onClick={() => setOutlineTone('playful')}>
+                                <svg className="tone-pill-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                                  <circle cx="13.5" cy="6.5" r=".5" fill="currentColor" stroke="none" />
+                                  <circle cx="17.5" cy="10.5" r=".5" fill="currentColor" stroke="none" />
+                                  <circle cx="8.5" cy="7.5" r=".5" fill="currentColor" stroke="none" />
+                                  <circle cx="6.5" cy="12.5" r=".5" fill="currentColor" stroke="none" />
+                                  <path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.47-1.125-.29-.289-.47-.687-.47-1.125a1.64 1.64 0 0 1 1.648-1.688h1.96c3.073 0 5.684-2.539 5.684-5.664C22 6.216 17.5 2 12 2z" />
+                                </svg>
+                                Playful
+                                <svg className="tone-pill-chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden><polyline points="6 9 12 15 18 9"/></svg>
+                              </button>
+                              <button type="button" className="tone-pill tone-pill--guided">
+                                <svg className="tone-pill-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                                  <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+                                </svg>
+                                Byte
+                                <svg className="tone-pill-chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden><polyline points="6 9 12 15 18 9"/></svg>
+                              </button>
+                              <button type="button" className="tone-pill tone-pill--guided tone-pill-update">
+                                <svg className="tone-pill-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                                  <path d="M23 4v6h-6" />
+                                  <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10" />
+                                </svg>
+                                Update
+                              </button>
+                            </div>
+                            <div className="outline-section-label">Review the outline content</div>
+                            <div
+                              className="outline-content-preview"
+                              onClick={() => setEditDocumentFullscreenOpen(true)}
+                              role="button"
+                              tabIndex={0}
+                              onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setEditDocumentFullscreenOpen(true); } }}
+                            >
+                              <div className="outline-content-preview-header">
+                                <span className="outline-content-preview-title">Editable document</span>
+                                <button
+                                  type="button"
+                                  className="outline-content-preview-open-btn"
+                                  onClick={(e) => { e.stopPropagation(); setEditDocumentFullscreenOpen(true); }}
+                                >
+                                  Edit
+                                </button>
+                              </div>
+                              <div className="outline-content-preview-body">
+                                <p className="outline-content-preview-doc-title">Deploy 2026 deck</p>
+                                <p className="outline-content-preview-text">{remixContent}</p>
+                                <div className="outline-preview-fade" />
+                              </div>
+                            </div>
+                            <div className="generate-widget-footer generate-widget-footer--cta-only">
+                              <button type="button" className="generate-design-btn generate-design-btn--guided" onClick={handleGenerateDesign} disabled={secondaryPanelLoading || !isLast}>
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden><polyline points="20 6 9 17 4 12" /></svg>
+                                Generate design
+                              </button>
+                            </div>
+                          </>
+                        )
+                      })()}
                     </div>
                   </div>
                   </div>
                   ) : null}
                   {w.variant === 'create-from-existing' ? (
-                  renderCreateFromExistingInteractive(false)
+                  renderCreateFromExistingInteractive(!isLast)
                   ) : null}
                   </div>
                   <div className="chatgpt-follow-up chatgpt-follow-up--post-widget">
@@ -1525,19 +2466,7 @@ Clear recommendations and what you need from the audience. Make the ask specific
                   {secondaryPanelLoading &&
                   (widgetEntries.length > 0 || hasChooserInThread) &&
                   widgetEntries[widgetEntries.length - 1]?.variant !== 'generating' ? (
-                  <div className="canva-tool-thread-block">
-                      <div
-                        className="canva-secondary-loading-chat"
-                        role="status"
-                        aria-live="polite"
-                        aria-label={SECONDARY_LOAD_MESSAGES[secondaryLoadPhaseIndex]}
-                      >
-                        <span className="chatgpt-loading-dot" aria-hidden />
-                        <span className="canva-secondary-loading-chat-message">
-                          {SECONDARY_LOAD_MESSAGES[secondaryLoadPhaseIndex]}
-                        </span>
-                      </div>
-                  </div>
+                    renderCanvaWidgetLoadingSegment()
                   ) : null}
                   </>
                 )}
@@ -1551,46 +2480,9 @@ Clear recommendations and what you need from the audience. Make the ask specific
             </div>
           </div>
 
-          {/* Composer - outline prompt or main chat */}
+          {/* Step 1 composer is inline in home hero (Figma). Step 3+: sticky composer with Canva tag. */}
+          {wizardStep >= 3 && (
           <div className="composer-wrapper">
-            {flowStep === 'outline' ? (
-              <form className="composer" onSubmit={handleOutlineSubmit}>
-                <div className="composer-content">
-                  <div className="composer-value">
-                    <input
-                      type="text"
-                      className="composer-input"
-                      placeholder="Ask anything"
-                      value={outlinePrompt}
-                      onChange={(e) => setOutlinePrompt(e.target.value)}
-                      autoFocus
-                    />
-                  </div>
-                </div>
-                <div className="composer-actions">
-                  <div className="composer-left">
-                    <button type="button" className="composer-icon-btn" aria-label="Add">
-                      <img src="/svg/Icon.svg" alt="" width={20} height={20} />
-                    </button>
-                    <div className="canva-tag">
-                      <img src="/Canva_Icon_logo.png" alt="" className="canva-tag-icon" width={16} height={16} />
-                      <span>Canva</span>
-                      <button type="button" className="canva-tag-close" aria-label="Remove">
-                        <img src="/svg/close.svg" alt="" width={16} height={16} />
-                      </button>
-                    </div>
-                  </div>
-                  <div className="composer-right">
-                    <button type="button" className="composer-icon-btn" aria-label="Voice input">
-                      <img src="/svg/_Composer-action/Icon.svg" alt="" width={20} height={20} />
-                    </button>
-                    <button type="submit" className="send-btn" aria-label="Send">
-                      <img src="/svg/_Composer-action/Send.svg" alt="" width={36} height={36} />
-                    </button>
-                  </div>
-                </div>
-              </form>
-            ) : (
             <form className="composer" onSubmit={handleSubmit}>
               <div className="composer-content">
                 <div className="composer-value">
@@ -1627,8 +2519,8 @@ Clear recommendations and what you need from the audience. Make the ask specific
                 </div>
               </div>
             </form>
-            )}
           </div>
+          )}
         </div>
       </main>
 
@@ -1727,7 +2619,10 @@ Clear recommendations and what you need from the audience. Make the ask specific
       )}
 
       {/* Full-screen edit document - edit content in full screen */}
-      {editDocumentFullscreenOpen && (remixItem || widgetStep === 'generate-from-scratch') && (
+      {editDocumentFullscreenOpen &&
+        (remixItem ||
+          (widgetStep === 'generate-from-scratch' &&
+            (lastWidgetEntry?.scratchContentMode ?? createExistingContentMode) !== 'generate-outline')) && (
         <div className="preview-fullscreen edit-document-fullscreen">
           <header className="preview-header">
             <div className="preview-header-left">

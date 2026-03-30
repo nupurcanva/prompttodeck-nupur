@@ -1,0 +1,15 @@
+{
+  "name": "prompt-to-deck",
+  "private": true,
+  "description": "Run `npm install` in chatgpt-app (and in AI Presentation Canva Templates when editing the editor). Default dev server is the ChatGPT prototype.",
+  "scripts": {
+    "postinstall": "npm install --prefix chatgpt-app",
+    "dev": "npm run dev --prefix chatgpt-app",
+    "build": "npm run build --prefix chatgpt-app",
+    "build:canva": "npm run build:canva --prefix chatgpt-app",
+    "preview": "npm run preview --prefix chatgpt-app",
+    "lint": "npm run lint --prefix chatgpt-app",
+    "install:chatgpt": "npm install --prefix chatgpt-app",
+    "install:canva": "npm install --prefix \"AI Presentation Canva Templates\""
+  }
+}
